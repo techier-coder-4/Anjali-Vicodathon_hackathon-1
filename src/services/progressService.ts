@@ -48,6 +48,19 @@ export class ProgressService {
   ): { updatedProgress: UserProgressState; newAchievements: string[] } {
     const currentDayProg = this.getDayProgress(progress, dayId);
 
+    let evalUnderstanding: UnderstandingStatus = currentDayProg.understandingStatus;
+    if (checkpointData) {
+      const learned = checkpointData.learned?.trim() || '';
+      const usage = checkpointData.usage?.trim() || '';
+      const confusing = checkpointData.confusing?.trim() || '';
+
+      if (learned.length < 10 || usage.length < 10 || confusing.length > 30) {
+        evalUnderstanding = 'needs_revisiting';
+      } else {
+        evalUnderstanding = 'understood';
+      }
+    }
+
     // Activity status becomes 'submitted'
     const updatedDayProg: DayProgress = {
       ...currentDayProg,
@@ -56,9 +69,7 @@ export class ProgressService {
       repoUrl,
       linkedinUrl,
       checkpointData: checkpointData || currentDayProg.checkpointData,
-      understandingStatus: checkpointData
-        ? (checkpointData.confusing.trim().length > 30 ? 'needs_revisiting' : 'understood')
-        : (currentDayProg.understandingStatus === 'not_checked' ? 'understood' : currentDayProg.understandingStatus)
+      understandingStatus: evalUnderstanding
     };
 
     const updatedCompletedDays = progress.completedDays.includes(dayId)
@@ -127,6 +138,46 @@ export class ProgressService {
 
     AuthService.saveProgress(updatedProgress);
     return { updatedProgress, newAchievements };
+  }
+
+  static saveReflection(
+    progress: UserProgressState,
+    dayId: number,
+    checkpointData: CheckpointData
+  ): UserProgressState {
+    const currentDayProg = this.getDayProgress(progress, dayId);
+
+    const learned = checkpointData.learned?.trim() || '';
+    const usage = checkpointData.usage?.trim() || '';
+    const confusing = checkpointData.confusing?.trim() || '';
+
+    // Heuristic: requires meaningful answers for learned & usage (at least 10 chars each)
+    // and confusing note length check
+    let evalUnderstanding: UnderstandingStatus = 'understood';
+    if (learned.length < 10 || usage.length < 10 || confusing.length > 30) {
+      evalUnderstanding = 'needs_revisiting';
+    }
+
+    const updatedDayProg: DayProgress = {
+      ...currentDayProg,
+      checkpointData: {
+        learned,
+        usage,
+        confusing
+      },
+      understandingStatus: evalUnderstanding
+    };
+
+    const updatedProgress: UserProgressState = {
+      ...progress,
+      dayProgresses: {
+        ...progress.dayProgresses,
+        [dayId]: updatedDayProg
+      }
+    };
+
+    AuthService.saveProgress(updatedProgress);
+    return updatedProgress;
   }
 
   static updateUnderstandingStatus(

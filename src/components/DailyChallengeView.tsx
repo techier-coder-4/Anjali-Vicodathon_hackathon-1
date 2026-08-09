@@ -15,7 +15,7 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
   onBackToDashboard,
   onNavigateDay
 }) => {
-  const { toggleRequirement, submitProofOfWork, updateUnderstandingStatus, getDayProgress } = useAuth();
+  const { toggleRequirement, submitProofOfWork, saveReflection, updateUnderstandingStatus, getDayProgress } = useAuth();
 
   const dayProg = getDayProgress(challenge.dayId);
 
@@ -24,9 +24,15 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
 
   // Checkpoint reflection form state
   const isCheckpointDay = challenge.dayId % 3 === 0;
+  const isReflectionSubmitted = Boolean(dayProg.checkpointData && dayProg.understandingStatus !== 'not_checked');
+
   const [learnedAnswer, setLearnedAnswer] = useState(dayProg.checkpointData?.learned || '');
   const [usageAnswer, setUsageAnswer] = useState(dayProg.checkpointData?.usage || '');
   const [confusingAnswer, setConfusingAnswer] = useState(dayProg.checkpointData?.confusing || '');
+
+  const [reflectionError, setReflectionError] = useState('');
+  const [isSubmittingReflection, setIsSubmittingReflection] = useState(false);
+  const [isEditingReflection, setIsEditingReflection] = useState(false);
 
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -39,12 +45,34 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
     setUsageAnswer(dayProg.checkpointData?.usage || '');
     setConfusingAnswer(dayProg.checkpointData?.confusing || '');
     setSubmitError('');
+    setReflectionError('');
+    setIsEditingReflection(false);
     setSubmitSuccess(dayProg.activityStatus === 'submitted');
   }, [challenge.dayId, dayProg]);
 
   const checkedCount = (dayProg.checkedRequirements || []).length;
   const totalReqs = challenge.requirements.length;
   const reqPercent = totalReqs > 0 ? Math.round((checkedCount / totalReqs) * 100) : 0;
+
+  const handleSubmitReflection = (e: React.FormEvent) => {
+    e.preventDefault();
+    setReflectionError('');
+
+    if (!learnedAnswer.trim() || !usageAnswer.trim()) {
+      setReflectionError('Please complete Question 1 (What you learned) and Question 2 (Real project use) before submitting.');
+      return;
+    }
+
+    setIsSubmittingReflection(true);
+    saveReflection(challenge.dayId, {
+      learned: learnedAnswer,
+      usage: usageAnswer,
+      confusing: confusingAnswer
+    });
+
+    setIsSubmittingReflection(false);
+    setIsEditingReflection(false);
+  };
 
   const handleSubmitProof = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,11 +89,7 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
     }
 
     let checkpointData: CheckpointData | undefined = undefined;
-    if (isCheckpointDay) {
-      if (!learnedAnswer.trim() || !usageAnswer.trim()) {
-        setSubmitError('Please complete the 3rd-day reflection questions.');
-        return;
-      }
+    if (isCheckpointDay && learnedAnswer.trim().length >= 5 && usageAnswer.trim().length >= 5) {
       checkpointData = {
         learned: learnedAnswer,
         usage: usageAnswer,
@@ -286,54 +310,182 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
           {/* CHECKPOINT REFLECTION (Every 3rd Day) */}
           {isCheckpointDay && (
             <div className="bg-white rounded-2xl border border-indigo-200/80 shadow-2xs p-6 space-y-4">
-              <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider">
-                <HelpCircle className="w-4 h-4" />
-                <span>Every 3rd Day Reflection Checkpoint</span>
-              </div>
-              <p className="text-sm font-extrabold text-slate-900">
-                Lightweight Checkpoint — "What did you actually learn?"
-              </p>
+              {isReflectionSubmitted && !isEditingReflection ? (
+                /* SUBMITTED COLLAPSED STATE */
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider">
+                      <HelpCircle className="w-4 h-4" />
+                      <span>3rd-Day Reflection Checkpoint</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Reflection Recorded</span>
+                    </span>
+                  </div>
 
-              <div className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    1. What did you actually learn today?
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={learnedAnswer}
-                    onChange={(e) => setLearnedAnswer(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
-                    placeholder="Describe the key concept in your own words..."
-                  />
-                </div>
+                  {/* Understanding Result Banner */}
+                  <div className={`p-4 rounded-xl border space-y-1.5 ${
+                    dayProg.understandingStatus === 'understood'
+                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                      : 'bg-amber-50/80 border-amber-200 text-amber-950'
+                  }`}>
+                    <div className="flex items-center gap-2 font-extrabold text-xs sm:text-sm">
+                      {dayProg.understandingStatus === 'understood' ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Understanding Status: Understood</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>Understanding Status: Needs Revisiting</span>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-xs leading-relaxed opacity-90">
+                      {dayProg.understandingStatus === 'understood'
+                        ? 'Great work! You demonstrated solid comprehension of the concept and its practical application.'
+                        : 'Completed, but consider revisiting this concept later in your journey.'}
+                    </p>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    2. Where could you use this concept in a real project?
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={usageAnswer}
-                    onChange={(e) => setUsageAnswer(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
-                    placeholder="e.g. When handling user authentication token refreshes or pagination..."
-                  />
-                </div>
+                  {/* Submitted Answers Summary */}
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3 text-xs">
+                    <div>
+                      <span className="font-bold text-slate-700 block mb-0.5">1. Key concept learned:</span>
+                      <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{dayProg.checkpointData?.learned || '—'}</p>
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-700 block mb-0.5">2. Real-world application:</span>
+                      <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{dayProg.checkpointData?.usage || '—'}</p>
+                    </div>
+                    {dayProg.checkpointData?.confusing && (
+                      <div>
+                        <span className="font-bold text-slate-700 block mb-0.5">3. Points to revisit / confusing parts:</span>
+                        <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{dayProg.checkpointData.confusing}</p>
+                      </div>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    3. What part is still confusing or needs revisiting?
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={confusingAnswer}
-                    onChange={(e) => setConfusingAnswer(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
-                    placeholder="Optional: Note any edge cases you want to revisit later..."
-                  />
+                  <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingReflection(true)}
+                      className="text-xs font-bold text-slate-600 hover:text-slate-900 underline underline-offset-2 min-h-[36px]"
+                    >
+                      Edit Reflection
+                    </button>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {challenge.dayId < 60 ? (
+                        <button
+                          type="button"
+                          onClick={() => onNavigateDay(challenge.dayId + 1)}
+                          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-2xs flex items-center justify-center gap-1.5 min-h-[40px]"
+                        >
+                          <span>Continue Journey →</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={onBackToDashboard}
+                          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-2xs flex items-center justify-center gap-1.5 min-h-[40px]"
+                        >
+                          <span>View Dashboard</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* EDITABLE FORM STATE */
+                <form onSubmit={handleSubmitReflection} className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider">
+                      <HelpCircle className="w-4 h-4" />
+                      <span>Every 3rd Day Reflection Checkpoint</span>
+                    </div>
+                    {isEditingReflection && (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingReflection(false)}
+                        className="text-xs font-bold text-slate-500 hover:text-slate-800"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900">
+                      Lightweight Checkpoint — "What did you actually learn?"
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Answer these 3 questions to evaluate your understanding of Day {challenge.dayId}.
+                    </p>
+                  </div>
+
+                  {reflectionError && (
+                    <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{reflectionError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-3.5">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        1. What did you actually learn today? *
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={learnedAnswer}
+                        onChange={(e) => setLearnedAnswer(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
+                        placeholder="Describe the key concept in your own words..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        2. Where could you use this concept in a real project? *
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={usageAnswer}
+                        onChange={(e) => setUsageAnswer(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
+                        placeholder="e.g. When handling user authentication token refreshes or pagination..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        3. What part is still confusing or needs revisiting?
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={confusingAnswer}
+                        onChange={(e) => setConfusingAnswer(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
+                        placeholder="Optional: Note any edge cases you want to revisit later..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReflection}
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-2xs flex items-center justify-center gap-2 transition-transform hover:scale-102 min-h-[44px] ml-auto"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>{isSubmittingReflection ? 'Saving Reflection...' : 'Submit Reflection'}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 

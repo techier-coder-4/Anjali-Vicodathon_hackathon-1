@@ -1,28 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { CHALLENGES, getChallengeByDay } from '../data/curriculum';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
-import { COMMUNITY_CHALLENGES } from '../data/communityChallenges';
-import { CommunityChallenge } from '../types';
 import { LabService } from '../services/labService';
+import { AIMentor } from './AIMentor';
+import { DayProgress } from '../types';
 import {
   Flame,
   Clock,
   Trophy,
   ArrowRight,
-  ShieldCheck,
   Sparkles,
   RefreshCw,
   Layers,
   Award,
-  Users,
-  Calendar,
-  Zap,
   CheckCircle2,
-  X,
-  Target,
-  Bot,
-  Terminal,
+  AlertCircle,
   Play
 } from 'lucide-react';
 
@@ -35,10 +28,6 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney, onOpenProfile, onOpenLabs }) => {
   const { user, progress } = useAuth();
-  const [selectedChallenge, setSelectedChallenge] = useState<CommunityChallenge | null>(null);
-  const [joinedChallengeIds, setJoinedChallengeIds] = useState<string[]>(
-    () => progress.joinedCommunityChallengeIds || []
-  );
 
   const currentDay = progress.currentDay || 1;
   const currentChallenge = getChallengeByDay(currentDay, user?.track) || CHALLENGES[0];
@@ -50,331 +39,390 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
   const isInconsistent = missedCount > 0 && !isCompletedStudent;
   const isNewStudent = completedCount === 0 && !isCompletedStudent;
 
-  const handleToggleJoin = (challengeId: string) => {
-    setJoinedChallengeIds(prev => {
-      const exists = prev.includes(challengeId);
-      const updated = exists ? prev.filter(id => id !== challengeId) : [...prev, challengeId];
-      // Save in localStorage if needed
-      try {
-        localStorage.setItem(`joined_challenges_${user?.id}`, JSON.stringify(updated));
-      } catch (e) {}
-      return updated;
-    });
-  };
+  // Track Label
+  const trackLabel = {
+    frontend: 'Frontend Engineering',
+    backend: 'Backend Engineering',
+    fullstack: 'Full Stack Engineering',
+    python: 'Python & Software Dev',
+    'data-ai': 'Data & AI Engineering',
+    java: 'Java Enterprise Dev',
+    cybersecurity: 'Cybersecurity & Defense'
+  }[user?.track || 'frontend'] || 'Software Engineering';
+
+  // Understanding statistics from progress.dayProgresses
+  const dayProgresses = progress.dayProgresses || {};
+  const completedDaysSet = new Set(progress.completedDays);
+  let understoodCount = 0;
+  let needsRevisitingCount = 0;
+  let firstRevisitingDay: number | null = null;
+
+  (Object.values(dayProgresses) as DayProgress[]).forEach((dp) => {
+    const isCompleted = completedDaysSet.has(dp.dayId) || dp.activityStatus === 'submitted';
+    if (isCompleted) {
+      if (dp.understandingStatus === 'understood') {
+        understoodCount++;
+      } else if (dp.understandingStatus === 'needs_revisiting') {
+        needsRevisitingCount++;
+        if (!firstRevisitingDay) {
+          firstRevisitingDay = dp.dayId;
+        }
+      }
+    }
+  });
+
+  // Active & Remaining stats
+  const todayIsCompleted = progress.completedDays.includes(currentDay);
+  const activeCount = todayIsCompleted ? 0 : 1;
+  const remainingCount = Math.max(0, 60 - completedCount - activeCount);
+
+  // Unlocked achievements
+  const unlockedAchievements = ALL_ACHIEVEMENTS.filter((a) =>
+    progress.unlockedAchievementIds.includes(a.id)
+  );
+
+  // Recommended Practice Lab
+  const recommendedLabs = LabService.getLabs({ trackCategory: user?.track });
+  const recommendedLab = recommendedLabs[0] || LabService.getLabs()[0];
 
   return (
-    <div className="space-y-8 pb-12 max-w-7xl mx-auto">
-      {/* 1. WELCOME WORKSPACE HEADER */}
-      {isCompletedStudent ? (
-        <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white rounded-2xl p-6 sm:p-8 border border-purple-900/50 shadow-md relative overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-200 text-xs font-bold border border-purple-400/30">
-                <Trophy className="w-4 h-4 text-amber-300" />
-                <span>60-Day Graduate 🎉</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">
-                Congratulations, {user?.name}! You completed all 60 days!
-              </h1>
-              <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                You built consistently for 60 days, mastered 6 stages of software development, and verified a proof-of-work engineering portfolio.
-              </p>
-            </div>
-            <button
-              onClick={onOpenProfile}
-              className="px-6 py-3 rounded-xl bg-white text-purple-950 hover:bg-purple-50 font-extrabold text-xs shadow-md transition-all shrink-0 flex items-center gap-2"
-            >
-              <Award className="w-4 h-4 text-purple-700" />
-              <span>View Portfolio & Certificate</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-2xs">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                {isNewStudent ? `Welcome, ${user?.name || 'Student'}` : `Welcome back, ${user?.name || 'Student'}`}
-              </h1>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 capitalize">
-                {user?.track || 'Frontend'} Track
-              </span>
-            </div>
-            <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">
-              {isNewStudent
-                ? 'Your 60-day journey starts today. Build one small thing today and build consistency.'
-                : `Day ${currentDay} of 60 · Current Streak: ${progress.currentStreak} days`}
-            </p>
-          </div>
-
-          <button
-            onClick={() => onSelectDay(currentDay)}
-            className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2.5 transition-transform hover:scale-102 shrink-0 min-h-[44px]"
-          >
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>{isNewStudent ? 'Start Day 1 Challenge' : `Continue Today's Challenge (Day ${currentDay})`}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* 2. RECOVERY BANNER (If momentum paused) */}
-      {isInconsistent && (
-        <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-amber-500 text-white shadow-2xs shrink-0 mt-0.5">
-              <RefreshCw className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-amber-900 uppercase tracking-wider">Momentum Recovery</p>
-              <p className="text-sm font-extrabold text-amber-950 mt-0.5">
-                Your momentum paused on previous days. One missed day doesn't erase your progress.
-              </p>
-              <p className="text-xs text-amber-800 mt-0.5">
-                You've built {completedCount} days of solid proof. Jump back in on Day {currentDay}!
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => onSelectDay(currentDay)}
-            className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-2xs shrink-0 flex items-center gap-1.5 transition-transform hover:scale-102"
-          >
-            <span>Resume Today's Challenge</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* 3. TODAY'S CHALLENGE CARD */}
-      {!isCompletedStudent && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-          <div className="bg-slate-900 text-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black px-2.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider">
-                  TODAY · DAY {currentChallenge.dayId}
-                </span>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 capitalize border border-slate-700">
-                  {currentChallenge.challengeType}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white">{currentChallenge.title}</h2>
-              <p className="text-xs text-slate-400">{currentChallenge.stageName}</p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-              <div className="text-right hidden sm:block">
-                <div className="flex items-center gap-1 text-xs text-slate-300 font-semibold justify-end">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>~{currentChallenge.estimatedMinutes} Mins</span>
-                </div>
-                <p className="text-[10px] text-slate-400 capitalize mt-0.5">Difficulty: {currentChallenge.difficulty}</p>
-              </div>
-
-              <button
-                onClick={() => onSelectDay(currentChallenge.dayId)}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-transform hover:scale-102 min-h-[44px]"
-              >
-                <span>{isNewStudent ? 'Start Day 1 Challenge' : "Continue Today's Challenge"}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-5">
-            <p className="text-slate-700 text-sm leading-relaxed font-normal">
-              {currentChallenge.description}
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Learning Objective</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">{currentChallenge.learningObjective}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1">
-                <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Why It Matters</h4>
-                <p className="text-xs text-indigo-800 leading-relaxed">{currentChallenge.whyItMatters}</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
-              <div className="p-1.5 rounded-lg bg-amber-200/80 text-amber-900 shrink-0 mt-0.5">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-amber-900">Today's Curiosity Challenge</p>
-                <p className="text-xs text-amber-800 italic mt-0.5 font-medium">"{currentChallenge.curiosityPrompt}"</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Recommended Practical Lab for Active Track */}
-      {(() => {
-        const recommendedLabs = LabService.getLabs({ trackCategory: user?.track });
-        const recommendedLab = recommendedLabs[0] || LabService.getLabs()[0];
-
-        if (!recommendedLab) return null;
-
-        return (
-          <div className="bg-white rounded-2xl border border-indigo-100 p-5 sm:p-6 shadow-2xs space-y-4 bg-gradient-to-r from-indigo-50/40 via-white to-sky-50/30">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-indigo-600 text-white shadow-2xs">
-                  <Terminal className="w-4 h-4" />
-                </span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 tracking-wider">
-                      RECOMMENDED PRACTICE LAB
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                      {recommendedLab.trackCategory} TRACK
-                    </span>
-                  </div>
-                  <h3 className="text-base font-extrabold text-slate-900 mt-0.5">
-                    {recommendedLab.title}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                  +{recommendedLab.xp} XP
-                </span>
-                <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
-                  ~{recommendedLab.estimatedMinutes} Mins
-                </span>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {recommendedLab.scenario}
-            </p>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-indigo-50">
-              <div className="flex flex-wrap gap-1.5">
-                {recommendedLab.requiredSkills.slice(0, 3).map((skill, idx) => (
-                  <span key={idx} className="text-[10px] font-bold bg-white text-indigo-900 px-2.5 py-1 rounded-md border border-indigo-100">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-
-              <button
-                onClick={() => {
-                  if (onOpenLabs) onOpenLabs();
-                  else window.location.hash = `/labs/${recommendedLab.id}`;
-                }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition-all shadow-2xs flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                <span>Launch Practical Lab</span>
-              </button>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* 4. STATS METRICS GRID */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>Overall Journey</span>
-            <Layers className="w-4 h-4 text-slate-800" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900">{progressPercent}%</span>
-            <span className="text-xs text-slate-500 font-medium">{completedCount}/60 Days</span>
-          </div>
-          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-            <div className="bg-slate-900 h-full rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }} />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>Current Streak</span>
-            <Flame className="w-4 h-4 text-amber-500 fill-amber-400" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900">{progress.currentStreak}</span>
-            <span className="text-xs text-slate-500 font-medium">Days Active</span>
-          </div>
-          <p className="text-[11px] text-amber-800 font-medium">
-            {progress.currentStreak > 0 ? `Building habit! Longest: ${progress.longestStreak}d` : 'Start Day 1 to begin streak!'}
+    <div className="space-y-6 pb-12 max-w-7xl mx-auto">
+      {/* 1. HEADER / CURRENT POSITION */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            {isNewStudent ? `Welcome, ${user?.name || 'Student'} 👋` : `Good morning, ${user?.name || 'Student'} 👋`}
+          </h1>
+          <p className="text-xs sm:text-sm font-extrabold text-indigo-600 mt-0.5">
+            {trackLabel} · Day {currentDay} / 60
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>Verified Proofs</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200/80 text-xs font-extrabold">
+            <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+            <span>{progress.currentStreak} day streak</span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900">{completedCount}</span>
-            <span className="text-xs text-emerald-700 font-medium">GitHub Repos</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 text-xs font-extrabold">
+            <Layers className="w-4 h-4 text-slate-600" />
+            <span>{completedCount}/60 days ({progressPercent}%)</span>
           </div>
-          <p className="text-[11px] text-slate-500">Activity + Understanding Checkpoint</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>Milestones</span>
-            <Trophy className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900">{progress.unlockedAchievementIds.length}</span>
-            <span className="text-xs text-slate-500 font-medium">/ {ALL_ACHIEVEMENTS.length} Badges</span>
-          </div>
-          <p className="text-[11px] text-slate-600 font-medium">Unlocked proof achievements</p>
         </div>
       </div>
 
-      {/* 5. YOUR 60-DAY JOURNEY GRID */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="text-lg font-black text-slate-900">Your 60-Day Journey</h3>
-            <p className="text-xs text-slate-500">Real calendar dates · Daily challenge curriculum</p>
+      {/* GRADUATE BANNER */}
+      {isCompletedStudent && (
+        <div className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Trophy className="w-6 h-6 text-amber-400 shrink-0" />
+            <div>
+              <p className="text-sm font-black">60-Day Graduate! 🎉</p>
+              <p className="text-xs text-slate-300">You completed all 60 days of software development challenges.</p>
+            </div>
           </div>
           <button
-            onClick={onOpenJourney}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 self-start sm:self-auto min-h-[36px]"
+            onClick={onOpenProfile}
+            className="px-5 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-extrabold text-xs shrink-0 flex items-center gap-2"
           >
-            <span>View Full Journey Map</span>
+            <Award className="w-4 h-4 text-indigo-600" />
+            <span>View Certificate</span>
+          </button>
+        </div>
+      )}
+
+      {/* MOMENTUM RECOVERY BANNER */}
+      {isInconsistent && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-4 h-4 text-amber-600 shrink-0" />
+            <p className="text-xs text-amber-900 font-bold">
+              Momentum paused. Jump right back in on <span className="underline">Day {currentDay}</span>!
+            </p>
+          </div>
+          <button
+            onClick={() => onSelectDay(currentDay)}
+            className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shrink-0 flex items-center gap-1.5"
+          >
+            <span>Resume Day {currentDay}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
+      )}
 
-        <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-12 gap-2 pt-2">
-          {Array.from({ length: 60 }, (_, i) => i + 1).map((dayNum) => {
-            const isCompleted = progress.completedDays.includes(dayNum);
-            const isCurrent = dayNum === currentDay;
-            const isMissed = progress.missedDays.includes(dayNum);
+      {/* MAIN TWO-COLUMN DASHBOARD GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* LEFT PRIMARY LAUNCHER COLUMN (8 COLS) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* 2. TODAY'S CHALLENGE — PRIMARY FOCUS */}
+          {!isCompletedStudent && (
+            <div className="bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-md p-6 space-y-5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider">
+                    TODAY · DAY {currentChallenge.dayId}
+                  </span>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 capitalize border border-slate-700">
+                    {currentChallenge.challengeType}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-300 font-semibold">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>~{currentChallenge.estimatedMinutes} mins</span>
+                </div>
+              </div>
 
-            let bgClass = 'bg-slate-100 text-slate-400 hover:bg-slate-200';
-            if (isCompleted) bgClass = 'bg-emerald-600 text-white font-bold shadow-2xs';
-            else if (isCurrent) bgClass = 'bg-indigo-600 text-white font-black ring-2 ring-indigo-400 ring-offset-1 shadow-xs';
-            else if (isMissed) bgClass = 'bg-amber-500 text-white font-bold';
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white">{currentChallenge.title}</h2>
+                <p className="text-xs text-slate-300 font-medium mt-1.5 leading-relaxed line-clamp-2">
+                  {currentChallenge.learningObjective || currentChallenge.description}
+                </p>
+              </div>
 
-            return (
+              <div className="pt-2 flex items-center justify-between border-t border-slate-800">
+                <span className="text-xs text-slate-400 font-medium capitalize">
+                  Difficulty: <strong className="text-slate-200">{currentChallenge.difficulty}</strong>
+                </span>
+
+                <button
+                  onClick={() => onSelectDay(currentChallenge.dayId)}
+                  className="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-2 transition-transform hover:scale-102 min-h-[44px]"
+                >
+                  <span>{isNewStudent ? 'Start Day 1 Challenge' : 'Continue Challenge'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* RECOMMENDED PRACTICAL LAB */}
+          {recommendedLab && (
+            <div className="bg-white rounded-2xl border border-indigo-100 p-5 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-indigo-600 text-white shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">
+                      RECOMMENDED PRACTICE LAB
+                    </span>
+                    <h3 className="text-sm font-black text-slate-900">{recommendedLab.title}</h3>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    +{recommendedLab.xp} XP
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                    ~{recommendedLab.estimatedMinutes}m
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                {recommendedLab.scenario}
+              </p>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div className="flex gap-1">
+                  {recommendedLab.requiredSkills.slice(0, 2).map((s, idx) => (
+                    <span key={idx} className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (onOpenLabs) onOpenLabs();
+                    else window.location.hash = `/labs/${recommendedLab.id}`;
+                  }}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-2xs flex items-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Launch Lab</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 60-DAY JOURNEY MAP PREVIEW */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">60-Day Journey</h3>
               <button
-                key={dayNum}
-                onClick={() => onSelectDay(dayNum)}
-                className={`h-9 rounded-lg text-xs flex items-center justify-center transition-all ${bgClass}`}
-                title={`Day ${dayNum}${isCompleted ? ' (Completed)' : isCurrent ? ' (Today)' : isMissed ? ' (Missed)' : ''}`}
+                onClick={onOpenJourney}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
               >
-                {dayNum}
+                <span>View Full Journey Map</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            );
-          })}
+            </div>
+
+            <div className="grid grid-cols-10 sm:grid-cols-12 gap-1.5 pt-1">
+              {Array.from({ length: 60 }, (_, i) => i + 1).map((dayNum) => {
+                const isCompleted = progress.completedDays.includes(dayNum);
+                const isCurrent = dayNum === currentDay;
+                const isMissed = progress.missedDays.includes(dayNum);
+
+                let bgClass = 'bg-slate-100 text-slate-400 hover:bg-slate-200';
+                if (isCompleted) bgClass = 'bg-emerald-600 text-white font-bold';
+                else if (isCurrent) bgClass = 'bg-slate-900 text-amber-300 font-black ring-2 ring-amber-400';
+                else if (isMissed) bgClass = 'bg-amber-500 text-white font-bold';
+
+                return (
+                  <button
+                    key={dayNum}
+                    onClick={() => onSelectDay(dayNum)}
+                    className={`h-7 rounded-md text-[11px] flex items-center justify-center transition-all ${bgClass}`}
+                    title={`Day ${dayNum}`}
+                  >
+                    {dayNum}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT METRICS & STATUS SIDEBAR COLUMN (4 COLS) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* 3. JOURNEY / PROGRESS */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Journey Progress</h3>
+
+            <div>
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-2xl font-black text-slate-900">{completedCount} / 60</span>
+                <span className="text-xs font-bold text-slate-500">{progressPercent}%</span>
+              </div>
+              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-slate-900 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 text-center">
+              <div className="bg-slate-50 p-2 rounded-xl">
+                <p className="text-xs font-black text-slate-900">{completedCount}</p>
+                <p className="text-[10px] font-bold text-slate-500">Completed</p>
+              </div>
+              <div className="bg-slate-50 p-2 rounded-xl">
+                <p className="text-xs font-black text-indigo-600">{activeCount}</p>
+                <p className="text-[10px] font-bold text-slate-500">Today</p>
+              </div>
+              <div className="bg-slate-50 p-2 rounded-xl">
+                <p className="text-xs font-black text-slate-600">{remainingCount}</p>
+                <p className="text-[10px] font-bold text-slate-500">Remaining</p>
+              </div>
+            </div>
+          </div>
+
+          {/* STREAK METRIC */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Current Streak</h3>
+              <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900">{progress.currentStreak}</span>
+              <span className="text-xs font-bold text-slate-500">days active</span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium">
+              Longest streak: <strong className="text-slate-800">{progress.longestStreak} days</strong>
+            </p>
+          </div>
+
+          {/* 4. UNDERSTANDING */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Understanding</h3>
+
+            {understoodCount === 0 && needsRevisitingCount === 0 ? (
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-center space-y-1">
+                <p className="text-xs font-bold text-slate-600">— Not assessed yet</p>
+                <p className="text-[11px] text-slate-400 leading-tight">Complete challenges & 3rd-day reflection checkpoints to evaluate understanding.</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs p-2 rounded-xl bg-emerald-50 text-emerald-900 font-bold border border-emerald-100">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Understood</span>
+                    </span>
+                    <span className="font-black text-sm">{understoodCount}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs p-2 rounded-xl bg-amber-50 text-amber-900 font-bold border border-amber-100">
+                    <span className="flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                      <span>Needs Revisiting</span>
+                    </span>
+                    <span className="font-black text-sm">{needsRevisitingCount}</span>
+                  </div>
+                </div>
+
+                {needsRevisitingCount > 0 && firstRevisitingDay && (
+                  <button
+                    onClick={() => onSelectDay(firstRevisitingDay!)}
+                    className="w-full text-xs font-bold text-amber-700 hover:text-amber-900 flex items-center justify-center gap-1 pt-1"
+                  >
+                    <span>{needsRevisitingCount} {needsRevisitingCount === 1 ? 'concept' : 'concepts'} worth revisiting →</span>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* 5. ACHIEVEMENTS PREVIEW */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Achievements</h3>
+              <button
+                onClick={onOpenProfile}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+              >
+                View all →
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                {unlockedAchievements.length > 0 ? (
+                  unlockedAchievements.slice(0, 4).map((ach) => (
+                    <div
+                      key={ach.id}
+                      className="p-2 rounded-xl bg-amber-100 text-amber-800 border border-amber-200"
+                      title={ach.title}
+                    >
+                      <Trophy className="w-4 h-4" />
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-2 rounded-xl bg-slate-100 text-slate-400 border border-slate-200">
+                    <Trophy className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+              <span className="text-xs font-black text-slate-700">
+                {unlockedAchievements.length} / {ALL_ACHIEVEMENTS.length} unlocked
+              </span>
+            </div>
+          </div>
+
+          {/* 6. TODAY'S AI MENTOR */}
+          {!isCompletedStudent && (
+            <AIMentor challenge={currentChallenge} />
+          )}
         </div>
       </div>
     </div>
   );
 };
+
 
 

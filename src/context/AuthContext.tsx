@@ -24,6 +24,7 @@ interface AuthContextType {
   logout: () => void;
   toggleRequirement: (dayId: number, reqIndex: number) => void;
   submitProofOfWork: (dayId: number, repoUrl: string, linkedinUrl: string, checkpointData?: CheckpointData) => string[];
+  saveReflection: (dayId: number, checkpointData: CheckpointData) => void;
   updateUnderstandingStatus: (dayId: number, status: UnderstandingStatus) => void;
   getDayProgress: (dayId: number) => DayProgress;
 }
@@ -161,6 +162,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newAchievements;
   };
 
+  const saveReflection = (dayId: number, checkpointData: CheckpointData) => {
+    if (!progress) return;
+    const updated = ProgressService.saveReflection(progress, dayId, checkpointData);
+    setProgress(updated);
+  };
+
   const updateUnderstandingStatus = (dayId: number, status: UnderstandingStatus) => {
     if (!progress) return;
     const updated = ProgressService.updateUnderstandingStatus(progress, dayId, status);
@@ -185,6 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         toggleRequirement,
         submitProofOfWork,
+        saveReflection,
         updateUnderstandingStatus,
         getDayProgress
       }}

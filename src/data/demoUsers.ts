@@ -82,7 +82,7 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
           progs[i] = {
             dayId: i,
             activityStatus: 'submitted',
-            understandingStatus: 'understood',
+            understandingStatus: (i % 3 === 0) ? 'understood' : 'not_checked',
             completedAt: new Date(Date.now() - (18 - i) * 86400000).toISOString(),
             repoUrl: `https://github.com/ananya/abtalks-60days/tree/main/day-${i}`,
             linkedinUrl: `https://linkedin.com/posts/ananya_abtalks60days-day${i}`,
@@ -140,17 +140,17 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
           progs[i] = {
             dayId: i,
             activityStatus: 'submitted',
-            understandingStatus: 'understood',
+            understandingStatus: (i % 3 === 0) ? 'understood' : 'not_checked',
             completedAt: new Date(Date.now() - (27 - i) * 86400000).toISOString(),
             repoUrl: `https://github.com/rahul/abtalks-challenge/day${i}`,
             linkedinUrl: `https://linkedin.com/posts/rahul_day${i}-abtalks`,
             checkedRequirements: [0, 1, 2]
           };
         }
-        progs[19] = { dayId: 19, activityStatus: 'missed', understandingStatus: 'needs_revisiting', checkedRequirements: [] };
-        progs[21] = { dayId: 21, activityStatus: 'missed', understandingStatus: 'needs_revisiting', checkedRequirements: [] };
-        progs[24] = { dayId: 24, activityStatus: 'missed', understandingStatus: 'needs_revisiting', checkedRequirements: [] };
-        progs[26] = { dayId: 26, activityStatus: 'missed', understandingStatus: 'needs_revisiting', checkedRequirements: [] };
+        progs[19] = { dayId: 19, activityStatus: 'missed', understandingStatus: 'not_checked', checkedRequirements: [] };
+        progs[21] = { dayId: 21, activityStatus: 'missed', understandingStatus: 'not_checked', checkedRequirements: [] };
+        progs[24] = { dayId: 24, activityStatus: 'missed', understandingStatus: 'not_checked', checkedRequirements: [] };
+        progs[26] = { dayId: 26, activityStatus: 'missed', understandingStatus: 'not_checked', checkedRequirements: [] };
         progs[27] = { dayId: 27, activityStatus: 'not_started', understandingStatus: 'not_checked', checkedRequirements: [] };
         return progs;
       })()
@@ -191,7 +191,7 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
           progs[i] = {
             dayId: i,
             activityStatus: 'submitted',
-            understandingStatus: 'understood',
+            understandingStatus: (i % 3 === 0) ? 'understood' : 'not_checked',
             completedAt: new Date(Date.now() - (60 - i) * 86400000).toISOString(),
             repoUrl: `https://github.com/priya/abtalks-data-ai/tree/main/day-${i}`,
             linkedinUrl: `https://linkedin.com/posts/priya_abtalks60days-day${i}`,

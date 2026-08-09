@@ -70,7 +70,7 @@ export function syncProgressWithJourneyDate(
       updatedDayProgresses[day] = {
         dayId: day,
         activityStatus: 'missed',
-        understandingStatus: dayProg?.understandingStatus || 'needs_revisiting',
+        understandingStatus: dayProg?.understandingStatus || 'not_checked',
         checkedRequirements: dayProg?.checkedRequirements || [],
         repoUrl: dayProg?.repoUrl,
         linkedinUrl: dayProg?.linkedinUrl
