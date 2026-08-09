@@ -20,7 +20,7 @@ import { AuthService } from './services/auth';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const MainApp: React.FC = () => {
-  const { user, progress } = useAuth();
+  const { user, progress, getChallengeForDay } = useAuth();
 
   // Current path state
   const [path, setPath] = useState<string>(() => window.location.pathname || '/');
@@ -353,7 +353,7 @@ const MainApp: React.FC = () => {
         );
       }
 
-      const challenge = getChallengeByDay(dayId, user?.track) || CHALLENGES[0];
+      const challenge = getChallengeForDay(dayId);
       return (
         <DailyChallengeView
           challenge={challenge}

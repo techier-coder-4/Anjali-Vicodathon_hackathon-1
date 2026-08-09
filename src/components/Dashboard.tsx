@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CHALLENGES, getChallengeByDay } from '../data/curriculum';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
-import { LabService } from '../services/labService';
 import { AIMentor } from './AIMentor';
-import { DayProgress, CustomChallenge } from '../types';
-import { CustomChallengeService } from '../services/customChallengeService';
+import { DayProgress } from '../types';
 import { CreateCustomChallengeModal } from './CreateCustomChallengeModal';
+import { JourneySelectorModal } from './JourneySelectorModal';
 import {
   Flame,
   Clock,
@@ -18,11 +16,10 @@ import {
   Award,
   CheckCircle2,
   AlertCircle,
-  Play,
   Plus,
   Compass,
-  Check,
-  Target
+  ChevronDown,
+  BookOpen
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -33,13 +30,9 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney, onOpenProfile, onOpenLabs }) => {
-  const { user, progress } = useAuth();
+  const { user, activeJourney, journeys, progress, getChallengeForDay } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [activeTabMode, setActiveTabMode] = useState<'track' | 'custom'>(() => {
-    return progress.activeMode === 'custom' ? 'custom' : 'track';
-  });
-
-  const customChallenge = user ? CustomChallengeService.getCustomChallenge(user.id) : null;
+  const [showSelectorModal, setShowSelectorModal] = useState(false);
 
   const currentDay = progress.currentDay || 1;
   const completedCount = progress.completedDays.length;
@@ -50,25 +43,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
   const isInconsistent = missedCount > 0 && !isCompletedStudent;
   const isNewStudent = completedCount === 0 && !isCompletedStudent;
 
-  // Determine active challenge based on tab mode
-  let currentChallenge = getChallengeByDay(currentDay, user?.track) || CHALLENGES[0];
-  if (activeTabMode === 'custom' && customChallenge && customChallenge.roadmap) {
-    const customDayObj = customChallenge.roadmap.find(d => d.dayId === currentDay) || customChallenge.roadmap[0];
-    if (customDayObj) {
-      currentChallenge = CustomChallengeService.convertToChallenge(customDayObj, customChallenge.category);
-    }
-  }
+  // Active Challenge for today in current active journey
+  const currentChallenge = getChallengeForDay(currentDay);
 
-  // Track Label
-  const trackLabel = {
-    frontend: 'Frontend Engineering',
-    backend: 'Backend Engineering',
-    fullstack: 'Full Stack Engineering',
-    python: 'Python & Software Dev',
-    'data-ai': 'Data & AI Engineering',
-    java: 'Java Enterprise Dev',
-    cybersecurity: 'Cybersecurity & Defense'
-  }[user?.track || 'frontend'] || 'Software Engineering';
+  const journeyTitle = activeJourney?.title || 'Engineering Roadmap';
+  const isCustomJourney = activeJourney?.type === 'custom';
 
   // Understanding statistics from progress.dayProgresses
   const dayProgresses = progress.dayProgresses || {};
@@ -101,22 +80,60 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
     progress.unlockedAchievementIds.includes(a.id)
   );
 
-  // Recommended Practice Lab
-  const recommendedLabs = LabService.getLabs({ trackCategory: user?.track });
-  const recommendedLab = recommendedLabs[0] || LabService.getLabs()[0];
-
   return (
     <div className="space-y-6 pb-12 max-w-7xl mx-auto">
-      {/* 1. HEADER / CURRENT POSITION */}
+      {/* 1. TOP JOURNEY SWITCHER BAR */}
+      <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+            <BookOpen className="w-5 h-5 text-amber-300" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Active Journey</span>
+              <span className={`text-[10px] font-extrabold px-2 py-0.2 rounded ${
+                isCustomJourney ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-800 text-indigo-300'
+              }`}>
+                {isCustomJourney ? 'Personal Challenge' : 'Organizer Track'}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowSelectorModal(true)}
+              className="group flex items-center gap-2 text-left font-black text-white text-base sm:text-lg hover:text-amber-300 transition-colors truncate max-w-full"
+            >
+              <span className="truncate">{journeyTitle}</span>
+              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-amber-300 shrink-0" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowSelectorModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs border border-slate-700 flex items-center gap-1.5 min-h-[40px]"
+          >
+            <Compass className="w-4 h-4 text-amber-400" />
+            <span>My Journeys ({journeys.length})</span>
+          </button>
+
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-2xs flex items-center gap-1.5 min-h-[40px]"
+          >
+            <Plus className="w-4 h-4 text-amber-300" />
+            <span>Challenge Yourself</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. WELCOME & STATS BANNER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             {isNewStudent ? `Welcome, ${user?.name || 'Student'} 👋` : `Good morning, ${user?.name || 'Student'} 👋`}
           </h1>
           <p className="text-xs sm:text-sm font-extrabold text-indigo-600 mt-0.5">
-            {activeTabMode === 'custom' && customChallenge
-              ? `My Challenge: ${customChallenge.goalTitle}`
-              : `${trackLabel} · Day ${currentDay} / 60`}
+            {journeyTitle} · Day {currentDay} / 60
           </p>
         </div>
 
@@ -131,69 +148,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
           </div>
         </div>
       </div>
-
-      {/* MODE SELECTOR TABS: COMMUNITY TRACK vs MY PERSONAL CHALLENGE */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setActiveTabMode('track')}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 whitespace-nowrap min-h-[40px] ${
-              activeTabMode === 'track'
-                ? 'bg-slate-900 text-white shadow-2xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <Compass className="w-4 h-4 text-amber-400" />
-            <span>Community Track ({trackLabel.split(' ')[0]})</span>
-          </button>
-
-          {customChallenge && (
-            <button
-              onClick={() => setActiveTabMode('custom')}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 whitespace-nowrap min-h-[40px] ${
-                activeTabMode === 'custom'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100'
-              }`}
-            >
-              <Target className="w-4 h-4 text-amber-300" />
-              <span>My Challenge: {customChallenge.goalTitle}</span>
-            </button>
-          )}
-        </div>
-
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 font-bold text-xs border border-indigo-200/80 flex items-center gap-1.5 shrink-0 self-start sm:self-auto min-h-[40px]"
-        >
-          <Plus className="w-4 h-4 text-indigo-600" />
-          <span>{customChallenge ? 'Create Another Personal Challenge' : 'Create My Own 60-Day Challenge'}</span>
-        </button>
-      </div>
-
-      {/* SELF-CHALLENGE CTA BANNER IF NO CUSTOM CHALLENGE CREATED YET */}
-      {!customChallenge && (
-        <div className="bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 sm:p-6 border border-indigo-900/60 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase tracking-wider">
-              <Sparkles className="w-3 h-3 text-amber-300" />
-              <span>FIRST-CLASS FEATURE: SELF-CHALLENGE</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-black text-white">Have a specific goal in mind? Build Your Own 60-Day Journey!</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              You don't have to wait for an organizer track. Choose your goal (Frontend, AI, Python, Interviews, etc.), skill level, and daily commitment, and let our AI Mentor generate a personalized 60-day roadmap.
-            </p>
-          </div>
-
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md flex items-center gap-2 shrink-0 transition-transform hover:scale-102 min-h-[44px]"
-          >
-            <Sparkles className="w-4 h-4 text-slate-950" />
-            <span>Create My Personal Challenge</span>
-          </button>
-        </div>
-      )}
 
       {/* GRADUATE BANNER */}
       {isCompletedStudent && (
@@ -279,64 +233,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
             </div>
           )}
 
-          {/* RECOMMENDED PRACTICAL LAB */}
-          {recommendedLab && (
-            <div className="bg-white rounded-2xl border border-indigo-100 p-5 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-indigo-600 text-white shrink-0">
-                    <Sparkles className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">
-                      RECOMMENDED PRACTICE LAB
-                    </span>
-                    <h3 className="text-sm font-black text-slate-900">{recommendedLab.title}</h3>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    +{recommendedLab.xp} XP
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                    ~{recommendedLab.estimatedMinutes}m
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                {recommendedLab.scenario}
-              </p>
-
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <div className="flex gap-1">
-                  {recommendedLab.requiredSkills.slice(0, 2).map((s, idx) => (
-                    <span key={idx} className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (onOpenLabs) onOpenLabs();
-                    else window.location.hash = `/labs/${recommendedLab.id}`;
-                  }}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-2xs flex items-center gap-1.5"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Launch Lab</span>
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* 60-DAY JOURNEY MAP PREVIEW */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                {activeTabMode === 'custom' ? 'My Challenge 60-Day Roadmap' : '60-Day Journey'}
+                {isCustomJourney ? 'My Challenge 60-Day Roadmap' : '60-Day Journey'}
               </h3>
               <button
                 onClick={onOpenJourney}
@@ -512,9 +413,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
       <CreateCustomChallengeModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          setActiveTabMode('custom');
-        }}
+        onSuccess={() => {}}
+      />
+
+      {/* JOURNEY SELECTOR MODAL */}
+      <JourneySelectorModal
+        isOpen={showSelectorModal}
+        onClose={() => setShowSelectorModal(false)}
+        onOpenCreateModal={() => setShowCreateModal(true)}
       />
     </div>
   );

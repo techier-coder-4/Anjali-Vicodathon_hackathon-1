@@ -94,35 +94,61 @@ PEDAGOGICAL RULES (CRITICAL):
 3. ADAPT TO STUDENT LEVEL (${userLevel || 'beginner'}):
    - Beginner: Provide step-by-step plain explanations and conceptual mental models.
    - Intermediate: Emphasize reasoning, architectural patterns, and debugging steps.
-   - Advanced: Focus on engineering tradeoffs, performance implications, and edge cases.
 4. OFF-TOPIC CONTROL: If the student asks about something totally unrelated to Day ${dayId} (${challengeTitle}) or general software development (e.g. pop culture, sports, unrelated trivia), politely redirect:
    "That's outside today's ABTalks challenge. Let's keep today's focus on Day ${dayId}: ${challengeTitle}!"
 5. TONE: Warm, encouraging, concise, highly structured, professional engineering mentor. Never shame or talk down to the student. Use markdown formatting with clear headings or bullet points where helpful.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-          topP: 0.95
-        }
-      });
+      let responseText = '';
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      const responseText = response.text || "I'm ready to guide you on today's challenge! What specific part can we look at together?";
+      while (attempts < maxAttempts) {
+        try {
+          attempts++;
+          const response = await ai.models.generateContent({
+            model: 'gemini-3.6-flash',
+            contents: prompt,
+            config: {
+              systemInstruction,
+              temperature: 0.7,
+              topP: 0.95
+            }
+          });
+          responseText = response.text || '';
+          if (responseText) break;
+        } catch (callErr: any) {
+          if (attempts >= maxAttempts) throw callErr;
+          await new Promise(res => setTimeout(res, attempts * 600));
+        }
+      }
+
+      const finalText = responseText || "I'm ready to guide you on today's challenge! What specific part can we look at together?";
 
       return res.json({
         success: true,
         isFallback: false,
-        text: responseText
+        text: finalText
       });
     } catch (err: any) {
-      console.error('Gemini API Error (fallback triggered):', err?.message || err);
+      const errStr = (err?.message || String(err)).toLowerCase();
+      const errCode = err?.status || err?.statusCode || 0;
+
+      let statusMsg = "AI guidance is temporarily unavailable. You can continue your challenge without AI guidance.";
+
+      if (errCode === 429 || errStr.includes('429') || errStr.includes('quota') || errStr.includes('resource_exhausted') || errStr.includes('rate limit')) {
+        statusMsg = "AI guidance is temporarily unavailable because the AI service limit has been reached. You can continue your challenge without AI guidance.";
+      } else if (errCode === 401 || errCode === 403 || errStr.includes('401') || errStr.includes('403') || errStr.includes('api_key') || errStr.includes('permission')) {
+        statusMsg = "AI guidance is currently unavailable due to service configuration. You can continue your challenge without AI guidance.";
+      } else if (errCode === 500 || errCode === 503 || errStr.includes('500') || errStr.includes('503') || errStr.includes('unavailable') || errStr.includes('network')) {
+        statusMsg = "AI guidance is temporarily unavailable due to service interruption. You can continue your challenge without AI guidance.";
+      }
+
+      console.warn('Gemini API notice (guided mode fallback activated):', errStr);
 
       return res.json({
         success: true,
         isFallback: true,
-        text: `💡 **ABTalks Guided Mode**\n\nAI Mentor is temporarily in Guided Mode. Here is your structured roadmap for Day ${dayId} (${challengeTitle}):\n\n` +
+        text: `⚠️ **${statusMsg}**\n\n💡 **ABTalks Guided Mode:**\n\n` +
               `**Why it matters:** ${guidedModeFallback.whyItMatters}\n\n` +
               `**What you'll learn:** ${guidedModeFallback.whatYoullLearn}\n\n` +
               `**Start Here:** ${guidedModeFallback.startHere}\n\n` +
@@ -176,16 +202,29 @@ Maintain a progressive curriculum structure:
 - Days 46-55: Capstone Project Construction
 - Days 56-60: Showcase & Interview Preparation`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.6-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.7
-        }
-      });
+      let responseText = '';
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      const responseText = response.text || '';
+      while (attempts < maxAttempts) {
+        try {
+          attempts++;
+          const response = await ai.models.generateContent({
+            model: 'gemini-3.6-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.7
+            }
+          });
+          responseText = response.text || '';
+          if (responseText) break;
+        } catch (callErr: any) {
+          if (attempts >= maxAttempts) throw callErr;
+          await new Promise(res => setTimeout(res, attempts * 600));
+        }
+      }
+
       const parsedData = JSON.parse(responseText);
       const roadmapArray = Array.isArray(parsedData) ? parsedData : (parsedData.roadmap || parsedData.days || []);
 
@@ -201,7 +240,7 @@ Maintain a progressive curriculum structure:
         message: 'Could not parse structured roadmap JSON.'
       });
     } catch (err: any) {
-      console.error('Error generating AI roadmap:', err?.message || err);
+      console.warn('AI roadmap generation notice (starter template fallback activated):', err?.message || 'High demand');
       return res.json({
         success: false,
         message: 'AI generation error. Falling back to local template.'

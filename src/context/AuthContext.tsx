@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserProgressState, StudentPersona, TrackType, ExperienceLevel, DayProgress, UnderstandingStatus, CheckpointData } from '../types';
+import { User, UserProgressState, StudentPersona, TrackType, ExperienceLevel, DayProgress, UnderstandingStatus, CheckpointData, Journey, Challenge } from '../types';
 import { AuthService } from '../services/auth';
 import { ProgressService } from '../services/progressService';
+import { JourneyService } from '../services/journeyService';
+import { CreateChallengeInput } from '../services/customChallengeService';
+import { getRoadmapForTrack } from '../data/curriculum';
 
 interface AuthContextType {
   user: User | null;
+  activeJourney: Journey | null;
+  activeJourneyId: string;
+  journeys: Journey[];
   progress: UserProgressState;
   persona: StudentPersona;
   switchPersona: (persona: StudentPersona) => User;
@@ -22,11 +28,16 @@ interface AuthContextType {
   updateUserOnboarding: (track: TrackType, level: ExperienceLevel, goal: string, college?: string, graduationYear?: string, timeGoal?: string) => void;
   updateUserProfile: (data: Partial<User>) => void;
   logout: () => void;
+  switchActiveJourney: (journeyId: string) => void;
+  createPersonalChallenge: (input: CreateChallengeInput) => Promise<{ journey: Journey; isFallback: boolean }>;
+  deleteJourney: (journeyId: string) => void;
+  archiveJourney: (journeyId: string) => void;
   toggleRequirement: (dayId: number, reqIndex: number) => void;
   submitProofOfWork: (dayId: number, repoUrl: string, linkedinUrl: string, checkpointData?: CheckpointData) => string[];
   saveReflection: (dayId: number, checkpointData: CheckpointData) => void;
   updateUnderstandingStatus: (dayId: number, status: UnderstandingStatus) => void;
   getDayProgress: (dayId: number) => DayProgress;
+  getChallengeForDay: (dayId: number) => Challenge;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,32 +57,118 @@ const defaultProgress: UserProgressState = {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => AuthService.getCurrentUser());
+
+  // Journeys list
+  const [journeys, setJourneys] = useState<Journey[]>(() =>
+    user ? JourneyService.getJourneys(user.id, user.track) : []
+  );
+
+  // Active journey ID
+  const [activeJourneyId, setActiveJourneyId] = useState<string>(() =>
+    user ? JourneyService.getActiveJourneyId(user.id, user.track) : ''
+  );
+
+  // Isolated active journey progress
   const [progress, setProgress] = useState<UserProgressState>(() =>
-    user ? AuthService.getProgress(user.id) : defaultProgress
+    user && activeJourneyId ? JourneyService.getJourneyProgress(user.id, activeJourneyId, user.track) : defaultProgress
   );
 
   const persona = user?.persona || 'new';
 
+  // Sync state when user changes or active journey changes
   useEffect(() => {
     if (user) {
-      const p = AuthService.getProgress(user.id);
-      setProgress(p);
+      const userJourneys = JourneyService.getJourneys(user.id, user.track);
+      setJourneys(userJourneys);
+
+      let currentActiveId = activeJourneyId;
+      if (!currentActiveId || !userJourneys.some(j => j.id === currentActiveId)) {
+        currentActiveId = JourneyService.getActiveJourneyId(user.id, user.track);
+        setActiveJourneyId(currentActiveId);
+      }
+
+      const activeProg = JourneyService.getJourneyProgress(user.id, currentActiveId, user.track);
+      setProgress(activeProg);
     } else {
+      setJourneys([]);
+      setActiveJourneyId('');
       setProgress(defaultProgress);
     }
-  }, [user?.id]);
+  }, [user?.id, activeJourneyId]);
+
+  const activeJourney = journeys.find(j => j.id === activeJourneyId) || journeys[0] || null;
+
+  const switchActiveJourney = (newJourneyId: string) => {
+    if (!user || !newJourneyId) return;
+    JourneyService.setActiveJourneyId(user.id, newJourneyId);
+    setActiveJourneyId(newJourneyId);
+    const newProg = JourneyService.getJourneyProgress(user.id, newJourneyId, user.track);
+    setProgress(newProg);
+  };
+
+  const createPersonalChallenge = async (input: CreateChallengeInput) => {
+    if (!user) throw new Error('User not authenticated');
+    const { journey, isFallback } = await JourneyService.createPersonalJourney(user.id, input);
+
+    // Refresh journeys and set active
+    const updatedJourneys = JourneyService.getJourneys(user.id, user.track);
+    setJourneys(updatedJourneys);
+    setActiveJourneyId(journey.id);
+
+    const freshProg = JourneyService.getJourneyProgress(user.id, journey.id, user.track);
+    setProgress(freshProg);
+
+    return { journey, isFallback };
+  };
+
+  const deleteJourney = (journeyIdToDelete: string) => {
+    if (!user) return;
+    const nextActiveId = JourneyService.deleteJourney(user.id, journeyIdToDelete);
+    const updatedJourneys = JourneyService.getJourneys(user.id, user.track);
+    setJourneys(updatedJourneys);
+    setActiveJourneyId(nextActiveId);
+    const newProg = JourneyService.getJourneyProgress(user.id, nextActiveId, user.track);
+    setProgress(newProg);
+  };
+
+  const archiveJourney = (journeyIdToArchive: string) => {
+    if (!user) return;
+    const nextActiveId = JourneyService.archiveJourney(user.id, journeyIdToArchive);
+    const updatedJourneys = JourneyService.getJourneys(user.id, user.track);
+    setJourneys(updatedJourneys);
+    setActiveJourneyId(nextActiveId);
+    const newProg = JourneyService.getJourneyProgress(user.id, nextActiveId, user.track);
+    setProgress(newProg);
+  };
 
   const switchPersona = (newPersona: StudentPersona): User => {
-    const { user: updatedUser, progress: updatedProgress } = AuthService.switchPersona(newPersona);
+    const { user: updatedUser } = AuthService.switchPersona(newPersona);
     setUser(updatedUser);
-    setProgress(updatedProgress);
+
+    const userJourneys = JourneyService.getJourneys(updatedUser.id, updatedUser.track);
+    setJourneys(userJourneys);
+    const firstActiveId = userJourneys[0]?.id || `track_${updatedUser.track}`;
+    JourneyService.setActiveJourneyId(updatedUser.id, firstActiveId);
+    setActiveJourneyId(firstActiveId);
+
+    const activeProg = JourneyService.getJourneyProgress(updatedUser.id, firstActiveId, updatedUser.track);
+    setProgress(activeProg);
+
     return updatedUser;
   };
 
   const login = (email: string, password?: string): User => {
-    const { user: loggedInUser, progress: loggedInProg } = AuthService.login(email, password);
+    const { user: loggedInUser } = AuthService.login(email, password);
     setUser(loggedInUser);
-    setProgress(loggedInProg);
+
+    const userJourneys = JourneyService.getJourneys(loggedInUser.id, loggedInUser.track);
+    setJourneys(userJourneys);
+    const activeId = JourneyService.getActiveJourneyId(loggedInUser.id, loggedInUser.track);
+    setActiveJourneyId(activeId);
+
+    const activeProg = JourneyService.getJourneyProgress(loggedInUser.id, activeId, loggedInUser.track);
+    setProgress(activeProg);
+
     return loggedInUser;
   };
 
@@ -85,7 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     college?: string,
     graduationYear?: string
   ): User => {
-    const { user: signedUpUser, progress: signedUpProg } = AuthService.signUp(
+    const { user: signedUpUser } = AuthService.signUp(
       name,
       email,
       password,
@@ -96,7 +193,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       graduationYear
     );
     setUser(signedUpUser);
-    setProgress(signedUpProg);
+
+    const userJourneys = JourneyService.getJourneys(signedUpUser.id, signedUpUser.track);
+    setJourneys(userJourneys);
+    const activeId = userJourneys[0]?.id || `track_${signedUpUser.track}`;
+    JourneyService.setActiveJourneyId(signedUpUser.id, activeId);
+    setActiveJourneyId(activeId);
+
+    const activeProg = JourneyService.getJourneyProgress(signedUpUser.id, activeId, signedUpUser.track);
+    setProgress(activeProg);
+
     return signedUpUser;
   };
 
@@ -121,6 +227,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     AuthService.saveUser(updatedUser);
     setUser(updatedUser);
+
+    // Refresh default track journey if track updated
+    const userJourneys = JourneyService.getJourneys(updatedUser.id, track);
+    setJourneys(userJourneys);
   };
 
   const updateUserProfile = (data: Partial<User>) => {
@@ -136,11 +246,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     AuthService.logout();
     setUser(null);
+    setJourneys([]);
+    setActiveJourneyId('');
+    setProgress(defaultProgress);
   };
 
   const toggleRequirement = (dayId: number, reqIndex: number) => {
-    if (!progress) return;
-    const updated = ProgressService.toggleRequirement(progress, dayId, reqIndex);
+    if (!user || !activeJourneyId) return;
+    const updated = JourneyService.toggleRequirement(user.id, activeJourneyId, dayId, reqIndex);
     setProgress(updated);
   };
 
@@ -150,9 +263,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     linkedinUrl: string,
     checkpointData?: CheckpointData
   ): string[] => {
-    if (!progress) return [];
-    const { updatedProgress, newAchievements } = ProgressService.submitProofOfWork(
-      progress,
+    if (!user || !activeJourneyId) return [];
+    const { updatedProgress, newAchievements } = JourneyService.submitProofOfWork(
+      user.id,
+      activeJourneyId,
       dayId,
       repoUrl,
       linkedinUrl,
@@ -163,14 +277,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const saveReflection = (dayId: number, checkpointData: CheckpointData) => {
-    if (!progress) return;
-    const updated = ProgressService.saveReflection(progress, dayId, checkpointData);
+    if (!user || !activeJourneyId) return;
+    const updated = JourneyService.saveReflection(user.id, activeJourneyId, dayId, checkpointData);
     setProgress(updated);
   };
 
   const updateUnderstandingStatus = (dayId: number, status: UnderstandingStatus) => {
-    if (!progress) return;
-    const updated = ProgressService.updateUnderstandingStatus(progress, dayId, status);
+    if (!user || !activeJourneyId) return;
+    const updated = JourneyService.updateUnderstandingStatus(user.id, activeJourneyId, dayId, status);
     setProgress(updated);
   };
 
@@ -178,10 +292,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return ProgressService.getDayProgress(progress, dayId);
   };
 
+  const getChallengeForDay = (dayId: number): Challenge => {
+    if (activeJourney && activeJourney.roadmap && activeJourney.roadmap.length > 0) {
+      const match = activeJourney.roadmap.find(c => c.dayId === dayId);
+      if (match) return match;
+    }
+    const defaultRoadmap = getRoadmapForTrack(user?.track || 'fullstack');
+    return defaultRoadmap.find(c => c.dayId === dayId) || defaultRoadmap[0];
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        activeJourney,
+        activeJourneyId,
+        journeys,
         progress,
         persona,
         switchPersona,
@@ -190,11 +316,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateUserOnboarding,
         updateUserProfile,
         logout,
+        switchActiveJourney,
+        createPersonalChallenge,
+        deleteJourney,
+        archiveJourney,
         toggleRequirement,
         submitProofOfWork,
         saveReflection,
         updateUnderstandingStatus,
-        getDayProgress
+        getDayProgress,
+        getChallengeForDay
       }}
     >
       {children}
@@ -209,3 +340,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

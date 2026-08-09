@@ -110,21 +110,56 @@ export class CustomChallengeService {
     return { challenge: newChallenge, isFallback };
   }
 
-  // Fallback 60-day roadmap generator using curated curriculum adaptation
+  // Fallback 60-day roadmap generator using domain-specific modules
   private static generateFallbackRoadmap(input: CreateChallengeInput): CustomChallengeRoadmapDay[] {
-    const trackCategoryMap: Record<string, TrackType> = {
-      'Frontend': 'frontend',
-      'Backend': 'backend',
-      'Full Stack': 'fullstack',
-      'Python': 'python',
-      'Data & AI': 'data-ai',
-      'Java': 'java',
-      'Cybersecurity': 'cybersecurity'
-    };
+    const textToMatch = `${input.goalTitle} ${input.category}`.toLowerCase();
 
-    const trackKey = trackCategoryMap[input.category] || 'fullstack';
+    // 1. VLSI / ASIC / Verilog / Hardware / FPGA
+    if (textToMatch.includes('vlsi') || textToMatch.includes('hardware') || textToMatch.includes('verilog') || textToMatch.includes('asic') || textToMatch.includes('fpga') || textToMatch.includes('rtl')) {
+      return this.generateVLSIRoadmap(input);
+    }
+
+    // 2. Embedded Systems / Microcontrollers / STM32 / Arduino / C++
+    if (textToMatch.includes('embedded') || textToMatch.includes('stm32') || textToMatch.includes('microcontroller') || textToMatch.includes('arduino') || textToMatch.includes('iot')) {
+      return this.generateEmbeddedRoadmap(input);
+    }
+
+    // 3. React / Frontend / Web Development
+    if (textToMatch.includes('frontend') || textToMatch.includes('react') || textToMatch.includes('web') || textToMatch.includes('html') || textToMatch.includes('css')) {
+      return this.mapCurriculumToRoadmap('frontend', input);
+    }
+
+    // 4. Backend / Node / Express / REST
+    if (textToMatch.includes('backend') || textToMatch.includes('express') || textToMatch.includes('node') || textToMatch.includes('api')) {
+      return this.mapCurriculumToRoadmap('backend', input);
+    }
+
+    // 5. Python / Automation / Scraping
+    if (textToMatch.includes('python') || textToMatch.includes('automation') || textToMatch.includes('scraping')) {
+      return this.mapCurriculumToRoadmap('python', input);
+    }
+
+    // 6. Data & AI / Machine Learning
+    if (textToMatch.includes('data') || textToMatch.includes('ai') || textToMatch.includes('machine learning') || textToMatch.includes('ml')) {
+      return this.mapCurriculumToRoadmap('data-ai', input);
+    }
+
+    // 7. Cybersecurity / Security
+    if (textToMatch.includes('cyber') || textToMatch.includes('security') || textToMatch.includes('hacking') || textToMatch.includes('network')) {
+      return this.mapCurriculumToRoadmap('cybersecurity', input);
+    }
+
+    // 8. Java / Spring Boot
+    if (textToMatch.includes('java') || textToMatch.includes('spring')) {
+      return this.mapCurriculumToRoadmap('java', input);
+    }
+
+    // 9. Generic Custom Topic Interpolation Generator
+    return this.generateGenericCustomRoadmap(input);
+  }
+
+  private static mapCurriculumToRoadmap(trackKey: TrackType, input: CreateChallengeInput): CustomChallengeRoadmapDay[] {
     const baseRoadmap = getRoadmapForTrack(trackKey);
-
     return baseRoadmap.map((ch) => ({
       dayId: ch.dayId,
       title: `${ch.title}`,
@@ -133,9 +168,126 @@ export class CustomChallengeService {
       whatToBuild: ch.requirements ? ch.requirements.join(' • ') : 'Complete today\'s practical assignment and test your output.',
       expectedOutcome: `Successfully build and verify Day ${ch.dayId} deliverable for ${input.goalTitle}.`,
       estimatedMinutes: ch.estimatedMinutes || 30,
-      curiosityPrompt: ch.curiosityPrompt || 'How would you explain this concept to another beginner?',
+      curiosityPrompt: ch.curiosityPrompt || 'How would you explain this concept to another engineer?',
       skills: ch.skills || [input.category]
     }));
+  }
+
+  private static generateVLSIRoadmap(input: CreateChallengeInput): CustomChallengeRoadmapDay[] {
+    const topic = input.goalTitle || 'VLSI Design Mastery';
+    return Array.from({ length: 60 }, (_, i) => {
+      const day = i + 1;
+      if (day <= 10) {
+        return {
+          dayId: day,
+          title: `Day ${day}: Semiconductor & Digital Logic Foundations — Part ${day}`,
+          whyItMatters: 'Digital IC design relies heavily on understanding CMOS transistors, Boolean algebra, and timing gates.',
+          whatToLearn: `Learn CMOS transistor operation, pull-up/pull-down networks, and logic gate propagation delays.`,
+          whatToBuild: `Model logic gates (NAND, NOR, XOR) and verify truth tables using Boolean reduction.`,
+          expectedOutcome: `Verified functional model of basic digital logic gates.`,
+          estimatedMinutes: 30,
+          curiosityPrompt: `Why do CMOS inverters consume minimal static power compared to dynamic switching power?`,
+          skills: ['VLSI', 'Digital Logic', 'CMOS']
+        };
+      } else if (day <= 25) {
+        return {
+          dayId: day,
+          title: `Day ${day}: Verilog HDL & Combinational Circuit Design — Part ${day - 10}`,
+          whyItMatters: 'Verilog is the industry-standard Hardware Description Language for modeling ASIC/FPGA RTL design.',
+          whatToLearn: `Verilog syntax, always blocks, assign statements, multiplexers, ALUs, and encoders.`,
+          whatToBuild: `Write a modular ${day % 2 === 0 ? '4-bit ALU' : 'Priority Encoder'} in Verilog HDL.`,
+          expectedOutcome: `Working Verilog RTL module ready for simulation.`,
+          estimatedMinutes: 45,
+          curiosityPrompt: `What is the difference between blocking (=) and non-blocking (<=) assignments in Verilog?`,
+          skills: ['Verilog HDL', 'RTL Design', 'Combinational Logic']
+        };
+      } else if (day <= 35) {
+        return {
+          dayId: day,
+          title: `Day ${day}: Sequential Circuits & Finite State Machines (FSM) — Part ${day - 25}`,
+          whyItMatters: 'Registers, Flip-Flops, and FSMs form the brain of microprocessors and memory controllers.',
+          whatToLearn: `Mealy vs. Moore state machines, state encoding, setup and hold time constraints.`,
+          whatToBuild: `Design a 3-process ${day % 2 === 0 ? 'Traffic Light Controller FSM' : 'Sequence Detector FSM'} in Verilog.`,
+          expectedOutcome: `Simulated FSM state transitions verified with clean state diagrams.`,
+          estimatedMinutes: 45,
+          curiosityPrompt: `How do setup and hold violations lead to metastability in digital circuits?`,
+          skills: ['Verilog HDL', 'FSM', 'Sequential Logic']
+        };
+      } else if (day <= 45) {
+        return {
+          dayId: day,
+          title: `Day ${day}: Simulation, Testbenches & STA Timing Analysis — Part ${day - 35}`,
+          whyItMatters: 'RTL verification ensures chip functionality before expensive tape-out manufacturing.',
+          whatToLearn: `Self-checking testbenches, clock generation, Static Timing Analysis (STA), critical path detection.`,
+          whatToBuild: `Write a testbench with automated assertions and run simulation using Icarus Verilog / GTKWave.`,
+          expectedOutcome: `Waveform output confirming zero timing or logic defects.`,
+          estimatedMinutes: 45,
+          curiosityPrompt: `How does clock domain crossing (CDC) cause race conditions in multi-clock systems?`,
+          skills: ['Simulation', 'Testbench', 'Static Timing Analysis']
+        };
+      } else if (day <= 55) {
+        return {
+          dayId: day,
+          title: `Day ${day}: Capstone: Pipelined RISC-V CPU Core Design — Day ${day - 45}`,
+          whyItMatters: 'Building a RISC-V pipeline synthesizes all digital design, architecture, and verification concepts.',
+          whatToLearn: `Fetch, Decode, Execute, Memory, and Writeback pipeline stages, hazard detection, and forwarding.`,
+          whatToBuild: `Implement pipeline stage ${((day - 46) % 5) + 1} and wire register file ALU datapaths.`,
+          expectedOutcome: `Executing instructions on functional pipelined CPU core architecture.`,
+          estimatedMinutes: 60,
+          curiosityPrompt: `How do branch predictors mitigate control hazards in deeply pipelined processors?`,
+          skills: ['RISC-V Architecture', 'Pipeline Design', 'ASIC Synthesis']
+        };
+      } else {
+        return {
+          dayId: day,
+          title: `Day ${day}: ASIC Synthesis, PPA Optimization & Tape-Out Prep — Day ${day - 55}`,
+          whyItMatters: 'Final stage: Optimizing Power, Performance, and Area (PPA) for physical chip fabrication.',
+          whatToLearn: `Gate-level netlists, cell library mapping, layout constraints, and interview problem solving.`,
+          whatToBuild: `Generate synthesis PPA reports and prepare portfolio documentation for ${topic}.`,
+          expectedOutcome: `Completed portfolio-ready VLSI digital design showcase.`,
+          estimatedMinutes: 45,
+          curiosityPrompt: `How do multi-threshold CMOS (MTCMOS) techniques reduce leakage current?`,
+          skills: ['Synthesis', 'PPA Optimization', 'Hardware Tape-Out']
+        };
+      }
+    });
+  }
+
+  private static generateEmbeddedRoadmap(input: CreateChallengeInput): CustomChallengeRoadmapDay[] {
+    const topic = input.goalTitle || 'Embedded Systems Mastery';
+    return Array.from({ length: 60 }, (_, i) => {
+      const day = i + 1;
+      return {
+        dayId: day,
+        title: `Day ${day}: Embedded ${day <= 10 ? 'C/C++ Fundamentals' : day <= 25 ? 'Peripherals & Drivers' : day <= 35 ? 'Protocols (UART/I2C/SPI)' : day <= 45 ? 'FreeRTOS & Memory' : day <= 55 ? 'Capstone Firmware' : 'Optimization & Showcase'} — Part ${day}`,
+        whyItMatters: `Bare-metal programming controls physical hardware sensors, actuators, and real-time systems.`,
+        whatToLearn: `Master embedded systems concept #${day} for ${topic}.`,
+        whatToBuild: `Implement and verify functional firmware code module for Day ${day}.`,
+        expectedOutcome: `Working hardware driver / firmware simulation compiled with zero warnings.`,
+        estimatedMinutes: 30,
+        curiosityPrompt: `How does memory-mapped I/O allow C pointers to directly manipulate microcontroller registers?`,
+        skills: ['Embedded C', 'Microcontrollers', 'Firmware']
+      };
+    });
+  }
+
+  private static generateGenericCustomRoadmap(input: CreateChallengeInput): CustomChallengeRoadmapDay[] {
+    const topic = input.goalTitle || input.category || 'Custom Technical Challenge';
+    return Array.from({ length: 60 }, (_, i) => {
+      const day = i + 1;
+      const stageName = day <= 10 ? 'Foundations' : day <= 25 ? 'Core Skill Building' : day <= 35 ? 'Hands-on Projects' : day <= 45 ? 'Advanced Systems' : day <= 55 ? 'Capstone Development' : 'Mastery & Showcase';
+      return {
+        dayId: day,
+        title: `Day ${day}: ${stageName} in ${topic} — Module ${day}`,
+        whyItMatters: `Day ${day} is a crucial milestone towards mastering "${topic}".`,
+        whatToLearn: `Understand essential principles, patterns, and practical techniques of ${topic} for Day ${day}.`,
+        whatToBuild: `Build a functional hands-on exercise and verify output for Day ${day}.`,
+        expectedOutcome: `Successfully verified working output and key takeaway for Day ${day}.`,
+        estimatedMinutes: 30,
+        curiosityPrompt: `How does today's concept connect to real-world production systems?`,
+        skills: [input.category || 'Engineering']
+      };
+    });
   }
 
   // Convert a custom roadmap day to standard Challenge interface for DailyChallengeView & AIMentor

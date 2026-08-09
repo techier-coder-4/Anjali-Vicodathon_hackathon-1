@@ -70,6 +70,23 @@ export interface Achievement {
   unlockedAt?: string;
 }
 
+export interface Journey {
+  id: string; // unique ID e.g. 'track_frontend' or 'custom_172345678'
+  userId: string;
+  title: string; // e.g. "Frontend Engineering", "VLSI Design Mastery"
+  category: string; // e.g. "Frontend", "VLSI / Hardware", "Python Automation"
+  type: 'track' | 'custom';
+  trackKey?: TrackType;
+  goalTitle: string;
+  experienceLevel: ExperienceLevel;
+  dailyTimeGoal: string;
+  finalOutcome: string;
+  createdAt: string;
+  startDate: string; // YYYY-MM-DD string for real-time calendar progression
+  roadmap: Challenge[]; // 60 day challenges generated or loaded specifically for this journey!
+  archived?: boolean;
+}
+
 export interface CustomChallengeRoadmapDay {
   dayId: number;
   title: string;
@@ -97,12 +114,15 @@ export interface CustomChallenge {
 
 export interface UserProgressState {
   userId: string;
+  journeyId?: string;
   currentDay: number;
   currentStreak: number;
   longestStreak: number;
   completedDays: number[];
   missedDays: number[];
   unlockedAchievementIds: string[];
+  lastCompletedDate?: string;
+  activityDates?: string[];
   dayProgresses: Record<number, DayProgress>;
   joinedCommunityChallengeIds?: string[];
   completedCommunityChallengeIds?: string[];

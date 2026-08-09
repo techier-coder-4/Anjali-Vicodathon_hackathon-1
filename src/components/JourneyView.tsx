@@ -9,14 +9,18 @@ interface JourneyViewProps {
 }
 
 export const JourneyView: React.FC<JourneyViewProps> = ({ onSelectDay }) => {
-  const { user, progress } = useAuth();
+  const { user, activeJourney, progress } = useAuth();
   const [stageFilter, setStageFilter] = useState<CurriculumStage | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'missed' | 'upcoming'>('all');
 
   const currentDay = progress.currentDay || 1;
 
   const stages: CurriculumStage[] = ['discover', 'build', 'experiment', 'real-world', 'build-your-own', 'showcase'];
-  const roadmapChallenges = getRoadmapForTrack(user?.track || 'fullstack');
+  const roadmapChallenges = activeJourney?.roadmap && activeJourney.roadmap.length > 0
+    ? activeJourney.roadmap
+    : getRoadmapForTrack(user?.track || 'fullstack');
+
+  const journeyTitle = activeJourney?.title || '60-Day Technical Journey';
 
   const filteredChallenges = roadmapChallenges.filter((c) => {
     if (stageFilter !== 'all' && c.stage !== stageFilter) return false;
@@ -38,10 +42,10 @@ export const JourneyView: React.FC<JourneyViewProps> = ({ onSelectDay }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            60-Day Technical Journey
+            {journeyTitle} — 60-Day Roadmap
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">
-            Explore all 60 progressive challenges structured across 6 skill stages.
+            Explore all 60 progressive challenges structured across 6 skill stages for this active journey.
           </p>
         </div>
 

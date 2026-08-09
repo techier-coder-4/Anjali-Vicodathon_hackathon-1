@@ -27,7 +27,7 @@ export const CreateCustomChallengeModal: React.FC<CreateCustomChallengeModalProp
   onClose,
   onSuccess
 }) => {
-  const { user } = useAuth();
+  const { user, createPersonalChallenge } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export const CreateCustomChallengeModal: React.FC<CreateCustomChallengeModalProp
 
     try {
       const category = currentPreset?.category || 'Custom';
-      const result = await CustomChallengeService.createCustomChallenge(user.id, {
+      const result = await createPersonalChallenge({
         goalTitle: finalTitle,
         category,
         experienceLevel: level,
@@ -62,14 +62,14 @@ export const CreateCustomChallengeModal: React.FC<CreateCustomChallengeModalProp
       });
 
       if (result.isFallback) {
-        setErrorNotice("AI API is temporarily in starter mode. We've prepared a high-quality starter roadmap for you so you can begin immediately!");
+        setErrorNotice("Roadmap created! We've prepared a high-quality 60-day domain curriculum for you to begin immediately.");
       }
 
       setTimeout(() => {
         setLoading(false);
         onSuccess();
         onClose();
-      }, result.isFallback ? 1200 : 800);
+      }, result.isFallback ? 800 : 500);
     } catch (e: any) {
       setLoading(false);
       setErrorNotice('Failed to create roadmap. Please try again.');
