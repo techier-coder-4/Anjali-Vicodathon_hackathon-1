@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Flame, LayoutDashboard, Compass, User as UserIcon, LogOut, Menu, X, Rocket, Sparkles } from 'lucide-react';
+import { Flame, LayoutDashboard, Compass, User as UserIcon, LogOut, Menu, X, Rocket, Sparkles, BookOpen, Layers, Target, HelpCircle } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: 'landing' | 'dashboard' | 'journey' | 'profile' | 'challenge';
@@ -17,11 +17,32 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, progress, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = [
+  const scrollToSection = (sectionId: string) => {
+    if (currentTab !== 'landing') {
+      setCurrentTab('landing');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const authenticatedNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: 'journey', label: '60-Day Journey', icon: <Compass className="w-4 h-4" /> },
     { id: 'profile', label: 'Profile', icon: <UserIcon className="w-4 h-4" /> }
   ] as const;
+
+  const publicNavItems = [
+    { id: 'how-it-works', label: 'How It Works', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'challenge', label: '60-Day Challenge', icon: <Target className="w-4 h-4" /> },
+    { id: 'tracks', label: 'Tracks', icon: <Layers className="w-4 h-4" /> },
+    { id: 'why-abtalks', label: 'Why ABTalks', icon: <HelpCircle className="w-4 h-4" /> }
+  ];
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
@@ -30,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo */}
           <div className="flex items-center gap-6">
             <button
-              onClick={() => setCurrentTab('landing')}
+              onClick={() => setCurrentTab(user ? (user.onboardingCompleted ? 'dashboard' : 'dashboard') : 'landing')}
               className="flex items-center gap-2.5 text-left group focus:outline-hidden"
             >
               <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-xs group-hover:bg-slate-800 transition-colors">
@@ -44,26 +65,40 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </button>
 
-            {/* Desktop SaaS Nav Links */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => {
-                const isActive = currentTab === item.id;
-                return (
+            {/* Navigation Links based on Auth state */}
+            {user ? (
+              <nav className="hidden md:flex items-center gap-1">
+                {authenticatedNavItems.map((item) => {
+                  const isActive = currentTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setCurrentTab(item.id)}
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                        isActive
+                          ? 'bg-slate-100 text-slate-900'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+            ) : (
+              <nav className="hidden md:flex items-center gap-1">
+                {publicNavItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => setCurrentTab(item.id)}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                      isActive
-                        ? 'bg-slate-100 text-slate-900'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                    }`}
+                    onClick={() => scrollToSection(item.id)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
                   >
-                    {item.icon}
                     <span>{item.label}</span>
                   </button>
-                );
-              })}
-            </nav>
+                ))}
+              </nav>
+            )}
           </div>
 
           {/* Right Side: User Status / Auth Controls */}
@@ -88,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   />
                   <div className="text-left leading-tight hidden lg:block pr-1">
                     <p className="text-xs font-extrabold text-slate-900">{user.name}</p>
-                    <p className="text-[10px] text-slate-500 capitalize">Day {progress.currentDay}</p>
+                    <p className="text-[10px] text-slate-500 capitalize">{user.track}</p>
                   </div>
                 </button>
 
@@ -101,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <button
                   onClick={openAuthModal}
                   className="px-4 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
@@ -110,10 +145,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
                 <button
                   onClick={openAuthModal}
-                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-2xs transition-all hover:scale-[1.02]"
+                  className="flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-2xs transition-all hover:scale-[1.02]"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Start 60 Days</span>
+                  <span>Start Your 60-Day Journey</span>
                 </button>
               </div>
             )}
@@ -141,30 +176,35 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3 shadow-lg">
-          <div className="grid grid-cols-1 gap-1">
-            <button
-              onClick={() => { setCurrentTab('landing'); setMobileMenuOpen(false); }}
-              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold min-h-[44px] transition-colors ${
-                currentTab === 'landing' ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Rocket className="w-4 h-4 text-amber-400" />
-              <span>Landing Page</span>
-            </button>
-
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => { setCurrentTab(item.id); setMobileMenuOpen(false); }}
-                className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold min-h-[44px] transition-colors ${
-                  currentTab === item.id ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
+          {user ? (
+            <div className="grid grid-cols-1 gap-1">
+              {authenticatedNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => { setCurrentTab(item.id); setMobileMenuOpen(false); }}
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold min-h-[44px] transition-colors ${
+                    currentTab === item.id ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-1">
+              {publicNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 min-h-[44px] transition-colors"
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="pt-3 border-t border-slate-100">
             {user ? (
@@ -188,13 +228,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => { openAuthModal(); setMobileMenuOpen(false); }}
-                className="w-full py-3 text-center font-extrabold text-xs text-white bg-slate-900 rounded-xl shadow-2xs min-h-[44px] flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Sign In / Start 60 Days</span>
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={() => { openAuthModal(); setMobileMenuOpen(false); }}
+                  className="w-full py-3 text-center font-extrabold text-xs text-white bg-slate-900 rounded-xl shadow-2xs min-h-[44px] flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Start Your 60-Day Journey</span>
+                </button>
+                <button
+                  onClick={() => { openAuthModal(); setMobileMenuOpen(false); }}
+                  className="w-full py-2.5 text-center font-bold text-xs text-slate-700 hover:bg-slate-100 rounded-xl border border-slate-200"
+                >
+                  Sign In
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -202,4 +250,3 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
-

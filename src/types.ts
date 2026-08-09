@@ -1,4 +1,4 @@
-export type TrackType = 'frontend' | 'backend' | 'fullstack' | 'python' | 'data-ai';
+export type TrackType = 'frontend' | 'backend' | 'fullstack' | 'python' | 'data-ai' | 'java' | 'cybersecurity';
 export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
 export type StudentPersona = 'new' | 'active' | 'inconsistent' | 'completed';
 
@@ -6,12 +6,17 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string;
   avatarUrl?: string;
   track: TrackType;
   experienceLevel: ExperienceLevel;
   primaryGoal: string;
+  college?: string;
+  graduationYear?: string;
+  dailyTimeGoal?: string;
   persona: StudentPersona;
   onboardingCompleted: boolean;
+  journeyStartDate?: string;
   createdAt: string;
 }
 
@@ -74,6 +79,48 @@ export interface UserProgressState {
   missedDays: number[];
   unlockedAchievementIds: string[];
   dayProgresses: Record<number, DayProgress>;
+  joinedCommunityChallengeIds?: string[];
+}
+
+export interface CommunityChallenge {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Weekend Build' | 'JavaScript Sprint' | 'UI Recreation' | 'API Challenge' | 'Debugging Sprint' | 'AI Mini Project' | 'Security Challenge' | 'Community Open Source';
+  difficulty: DifficultyLevel;
+  startDate: string;
+  endDate: string;
+  durationLabel: string;
+  estimatedTime: string;
+  participantsCount: number;
+  status: 'upcoming' | 'active' | 'joined' | 'completed';
+  ctaText: string;
+  skills: string[];
+  rules: string[];
+  rewardBadge: string;
+  projectPrompt: string;
+}
+
+export interface VideoScriptSection {
+  type: 'intro' | 'what' | 'why_matters' | 'where_used' | 'student_benefits' | 'today_mission' | 'motivation';
+  title: string;
+  narration: string;
+  visualHook: string;
+  durationSeconds: number;
+  jargonTerms?: { term: string; simpleMeaning: string }[];
+}
+
+export interface LearningVideoScript {
+  trackId: TrackType;
+  dayId: number;
+  challengeTitle: string;
+  durationSeconds: number;
+  sections: VideoScriptSection[];
+  transcript: string;
+  fallbackExplanation: string;
+  realWorldUses: string[];
+  studentBenefits: string[];
+  todayMissionSummary: string;
 }
 
 export interface AIMessage {

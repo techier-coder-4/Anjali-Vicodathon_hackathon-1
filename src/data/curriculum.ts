@@ -4,6 +4,8 @@ import { BACKEND_ROADMAP } from './roadmaps/backend';
 import { FULLSTACK_ROADMAP } from './roadmaps/fullstack';
 import { PYTHON_ROADMAP } from './roadmaps/python';
 import { DATA_AI_ROADMAP } from './roadmaps/data-ai';
+import { JAVA_ROADMAP } from './roadmaps/java';
+import { CYBERSECURITY_ROADMAP } from './roadmaps/cybersecurity';
 
 export const STAGE_NAMES: Record<CurriculumStage, string> = {
   'discover': 'Stage 1 — Discover (Days 1–10)',
@@ -28,6 +30,10 @@ export function getRoadmapForTrack(track: TrackType): Challenge[] {
       return PYTHON_ROADMAP;
     case 'data-ai':
       return DATA_AI_ROADMAP;
+    case 'java':
+      return JAVA_ROADMAP;
+    case 'cybersecurity':
+      return CYBERSECURITY_ROADMAP;
     default:
       return FULLSTACK_ROADMAP;
   }

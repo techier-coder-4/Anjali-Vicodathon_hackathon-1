@@ -123,7 +123,6 @@ PEDAGOGICAL RULES (CRITICAL):
     } catch (err: any) {
       console.error('Gemini API Error (fallback triggered):', err?.message || err);
 
-      // Quota / Rate limit or API error fallback to ABTalks Guided Mode
       return res.json({
         success: true,
         isFallback: true,
@@ -135,6 +134,160 @@ PEDAGOGICAL RULES (CRITICAL):
               `**Next Action:** Check off requirement #1: "${guidedModeFallback.nextStep}"`,
         guidedMode: guidedModeFallback
       });
+    }
+  });
+
+  // AI "Why Learn This?" Video Script Generation API
+  app.post('/api/gemini/video-script', async (req: Request, res: Response) => {
+    const {
+      trackId,
+      dayId,
+      challengeTitle,
+      learningObjective,
+      whyItMatters,
+      requirements,
+      curiosityPrompt,
+      description
+    } = req.body;
+
+    const reqList: string[] = Array.isArray(requirements) ? requirements : [];
+
+    // Fallback script if AI is missing or fails
+    const fallbackScript = {
+      trackId: trackId || 'fullstack',
+      dayId: dayId || 1,
+      challengeTitle: challengeTitle || 'Today\'s Challenge',
+      durationSeconds: 65,
+      sections: [
+        {
+          type: 'intro',
+          title: 'Real-World Hook',
+          narration: `Ever wondered how modern applications handle data and UI seamlessly for millions of users?`,
+          visualHook: `🎬 Visualizing user interaction flow for ${challengeTitle || 'today\'s challenge'}`,
+          durationSeconds: 8
+        },
+        {
+          type: 'what',
+          title: 'What Is It?',
+          narration: `Today's concept is "${challengeTitle}". In simple words, it is about ${learningObjective || 'building reliable software components'}.`,
+          visualHook: `💡 Architecture Diagram: ${challengeTitle}`,
+          durationSeconds: 12,
+          jargonTerms: [
+            { term: 'Core Mechanic', simpleMeaning: 'the essential rule that makes this feature work' }
+          ]
+        },
+        {
+          type: 'why_matters',
+          title: 'Why Does It Matter?',
+          narration: `${whyItMatters || 'This concept ensures your applications remain fast, structured, and easy to maintain.'}`,
+          visualHook: `⚡ Engineering Problem Solved`,
+          durationSeconds: 10
+        },
+        {
+          type: 'where_used',
+          title: 'Where Is It Used?',
+          narration: `Apps like Spotify, Instagram, Zomato, and Razorpay rely on this exact engineering pattern every day.`,
+          visualHook: `🌐 Production Apps in Action`,
+          durationSeconds: 10
+        },
+        {
+          type: 'student_benefits',
+          title: 'Why Should You Learn It?',
+          narration: `Understanding this boosts your confidence in coding interviews and lets you build real portfolio projects.`,
+          visualHook: `🎯 Career Impact & Portfolio Proof`,
+          durationSeconds: 10
+        },
+        {
+          type: 'today_mission',
+          title: "Today's Mission",
+          narration: `Today you will build: ${description || 'a hands-on working prototype for your portfolio'}.`,
+          visualHook: `🛠️ Today's Project Blueprint`,
+          durationSeconds: 10
+        },
+        {
+          type: 'motivation',
+          title: "Let's Build It!",
+          narration: `Now you know why this matters. Let's get hands-on and build it!`,
+          visualHook: `🚀 Ready to Start Challenge`,
+          durationSeconds: 5
+        }
+      ],
+      transcript: `Ever wondered how modern applications work seamlessly? Today's concept is "${challengeTitle}". In simple words: ${learningObjective}. ${whyItMatters}. Real-world apps use this every day. Mastering this boosts your engineering confidence. Today's mission: ${description}. Now you know why this matters—let's build it!`,
+      fallbackExplanation: `${whyItMatters} Today's hands-on project gives you real portfolio proof!`,
+      realWorldUses: ['Spotify', 'Instagram', 'Razorpay', 'Swiggy'],
+      studentBenefits: ['Builds real production-ready software', 'Frequently asked in tech interviews', 'Enhances GitHub portfolio'],
+      todayMissionSummary: description || 'Complete today\'s hands-on project.'
+    };
+
+    if (!ai) {
+      return res.json({ success: true, isFallback: true, script: fallbackScript });
+    }
+
+    try {
+      const prompt = `Generate a short 45-75 second motivational learning video script for a student starting today's technical challenge.
+
+GROUNDING DATA:
+- Track: ${trackId || 'fullstack'}
+- Day: ${dayId || 1}
+- Challenge Title: ${challengeTitle}
+- Objective: ${learningObjective}
+- Why It Matters: ${whyItMatters}
+- Curiosity Prompt: "${curiosityPrompt || ''}"
+- Description: ${description}
+- Requirements: ${reqList.join(', ')}
+
+Return valid JSON with:
+{
+  "durationSeconds": 65,
+  "sections": [
+    {
+      "type": "intro" | "what" | "why_matters" | "where_used" | "student_benefits" | "today_mission" | "motivation",
+      "title": "Short section title",
+      "narration": "Friendly mentor narration text (1-2 sentences)",
+      "visualHook": "Visual graphic or animation prompt description",
+      "durationSeconds": 10,
+      "jargonTerms": [ { "term": "API", "simpleMeaning": "a way for two apps to talk to each other" } ]
+    }
+  ],
+  "transcript": "Full combined narration transcript string",
+  "fallbackExplanation": "1-2 sentence quick summary explanation",
+  "realWorldUses": ["App 1", "App 2", "App 3"],
+  "studentBenefits": ["Benefit 1", "Benefit 2", "Benefit 3"],
+  "todayMissionSummary": "Summary of today's project"
+}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json'
+        }
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      if (parsed.sections && Array.isArray(parsed.sections) && parsed.sections.length > 0) {
+        return res.json({
+          success: true,
+          isFallback: false,
+          script: {
+            trackId,
+            dayId,
+            challengeTitle,
+            durationSeconds: parsed.durationSeconds || 65,
+            sections: parsed.sections,
+            transcript: parsed.transcript || fallbackScript.transcript,
+            fallbackExplanation: parsed.fallbackExplanation || fallbackScript.fallbackExplanation,
+            realWorldUses: parsed.realWorldUses || fallbackScript.realWorldUses,
+            studentBenefits: parsed.studentBenefits || fallbackScript.studentBenefits,
+            todayMissionSummary: parsed.todayMissionSummary || fallbackScript.todayMissionSummary
+          }
+        });
+      }
+
+      return res.json({ success: true, isFallback: true, script: fallbackScript });
+    } catch (err: any) {
+      console.error('Gemini Video Script Error:', err?.message || err);
+      return res.json({ success: true, isFallback: true, script: fallbackScript });
     }
   });
 

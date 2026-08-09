@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, CheckCircle2, ShieldCheck, Flame, Cpu, Code2, Sparkles, BookOpen, Layers, Target, Trophy } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ShieldCheck, Flame, Cpu, Code2, Sparkles, BookOpen, Layers, Target, Trophy, Terminal, Database, Globe, Brain, Shield, Server } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -10,7 +10,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
   return (
     <div className="bg-slate-50 text-slate-900 overflow-hidden">
       {/* Hero Section */}
-      <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section id="challenge" className="relative pt-12 pb-20 md:pt-20 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto space-y-6">
           <div className="inline-flex flex-wrap justify-center items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-[10px] sm:text-xs font-extrabold shadow-2xs max-w-full text-center">
             <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -32,7 +32,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
             <button
               onClick={onStart}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base shadow-xs transition-all hover:scale-[1.01] flex items-center justify-center gap-2 group"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base shadow-xs transition-all hover:scale-[1.01] flex items-center justify-center gap-2 group min-h-[44px]"
             >
               <span>Start Your 60-Day Journey</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-amber-400" />
@@ -40,9 +40,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
 
             <button
               onClick={onExplore}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-gray-100 text-slate-900 font-bold text-base border border-gray-200/80 shadow-2xs transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white hover:bg-gray-100 text-slate-900 font-bold text-base border border-gray-200/80 shadow-2xs transition-all flex items-center justify-center gap-2 min-h-[44px]"
             >
-              <span>See How It Works</span>
+              <span>Explore All 60 Days</span>
             </button>
           </div>
 
@@ -53,8 +53,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               <p className="text-xs text-slate-500 font-medium">Distinct Daily Challenges</p>
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">6</p>
-              <p className="text-xs text-slate-500 font-medium">Progressive Stages</p>
+              <p className="text-2xl font-black text-slate-900">7</p>
+              <p className="text-xs text-slate-500 font-medium">Specialized Track Roadmaps</p>
             </div>
             <div>
               <p className="text-2xl font-black text-slate-900">100%</p>
@@ -62,22 +62,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
             </div>
             <div>
               <p className="text-2xl font-black text-slate-900">24/7</p>
-              <p className="text-xs text-slate-500 font-medium">AI Learning Mentor</p>
+              <p className="text-xs text-slate-500 font-medium">AI Learning Guide</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* WHY THIS MATTERS */}
-      <section className="py-16 bg-white border-y border-slate-200/80">
+      <section id="why-abtalks" className="py-16 bg-white border-y border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-xs font-extrabold text-indigo-600 uppercase tracking-widest">Why This Matters</h2>
+            <h2 className="text-xs font-extrabold text-indigo-600 uppercase tracking-widest">Why ABTalks</h2>
             <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
               Designed for Real Engineering Mastery
             </p>
             <p className="text-slate-600 text-sm mt-2">
-              Most coding platforms test memory or repetitive syntax. ABTalks focuses on engineering intuition.
+              Most coding platforms test memory or repetitive syntax. ABTalks focuses on engineering intuition and consistency.
             </p>
           </div>
 
@@ -88,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">Build Real Projects</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Move beyond toy code snippets. Work with Express APIs, state boundaries, debouncing, error fallbacks, and real capstone products.
+                Move beyond toy code snippets. Work with APIs, state boundaries, debouncing, error fallbacks, and real capstone products.
               </p>
             </div>
 
@@ -116,7 +116,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="how-it-works" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-xs font-extrabold text-indigo-600 uppercase tracking-widest">How It Works</h2>
           <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
@@ -144,6 +144,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </section>
 
+      {/* TRACKS & LEARNING PATHS */}
+      <section id="tracks" className="py-20 bg-white border-y border-slate-200/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-xs font-extrabold text-indigo-600 uppercase tracking-widest">Learning Tracks</h2>
+            <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
+              7 Specialized 60-Day Technical Roadmaps
+            </p>
+            <p className="text-slate-600 text-sm mt-2">
+              Each track provides a genuinely tailored 60-day curriculum with distinct daily challenges, tools, and proof-of-work capstones.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { id: 'frontend', title: 'Frontend Engineering', desc: 'React 18, TypeScript, Tailwind, State Management, Next.js, Web Vitals, Performance.', icon: <Globe className="w-6 h-6 text-blue-600" /> },
+              { id: 'backend', title: 'Backend Systems', desc: 'Node.js, Express, PostgreSQL, SQL, Redis, REST APIs, System Architecture, Docker.', icon: <Database className="w-6 h-6 text-emerald-600" /> },
+              { id: 'fullstack', title: 'Full-Stack Web', desc: 'End-to-End React + Node.js, Databases, Auth, Deployment, CI/CD, Capstone Web Apps.', icon: <Server className="w-6 h-6 text-purple-600" /> },
+              { id: 'python', title: 'Python Development', desc: 'Core Python 3.12, Data Structures, FastAPI, Async IO, Automation, Web Scraping.', icon: <Terminal className="w-6 h-6 text-amber-600" /> },
+              { id: 'data-ai', title: 'Data & AI Engineering', desc: 'Pandas, NumPy, Scikit-learn, Vector DBs, Gemini API, RAG Pipelines, Model Deployment.', icon: <Brain className="w-6 h-6 text-rose-600" /> },
+              { id: 'java', title: 'Java Engineering', desc: 'Java 21, OOP, Collections, Concurrency, Spring Boot 3, Hibernate, Microservices.', icon: <Code2 className="w-6 h-6 text-indigo-600" /> },
+              { id: 'cybersecurity', title: 'Cybersecurity', desc: 'Linux, Networking, Wireshark, OWASP Top 10, Burp Suite, DevSecOps, PenTesting.', icon: <Shield className="w-6 h-6 text-red-600" /> },
+            ].map((t) => (
+              <div key={t.id} className="p-6 rounded-2xl bg-slate-50 border border-slate-200/90 hover:border-slate-300 hover:shadow-md transition-all space-y-3">
+                <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-2xs">
+                  {t.icon}
+                </div>
+                <h3 className="font-extrabold text-slate-900 text-lg">{t.title}</h3>
+                <p className="text-slate-600 text-xs leading-relaxed">{t.desc}</p>
+                <div className="pt-2">
+                  <span className="text-[11px] font-bold text-indigo-600 hover:underline inline-flex items-center gap-1 cursor-pointer" onClick={onStart}>
+                    Explore 60-Day Curriculum →
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* REAL STUDENT OUTCOMES */}
       <section className="py-16 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -157,22 +197,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
-                name: 'Maya Lin',
-                track: 'Full-Stack Web',
-                persona: 'Active Student (Day 17)',
+                name: 'Aarav Sharma',
+                track: 'Frontend Development',
+                persona: 'Active Student (Day 18)',
                 quote: 'ABTalks kept me accountable every single morning. The curiosity prompts forced me to understand WHY code works, not just copy solutions.',
-                proof: 'GitHub: 16 verified daily commits'
+                proof: 'GitHub: 18 verified daily commits'
               },
               {
-                name: 'Jordan Vance',
+                name: 'Rahul Kumar',
                 track: 'Backend Systems',
-                persona: 'Recovered Student (Day 23)',
+                persona: 'Recovered Student (Day 27)',
                 quote: 'When I missed two days during midterms, ABTalks welcomed me back without resetting my entire journey to zero. That non-shaming recovery saved my momentum.',
-                proof: 'LinkedIn: 18 public progress posts'
+                proof: 'LinkedIn: 22 public progress posts'
               },
               {
-                name: 'Sarah Connor',
-                track: 'Full-Stack Web',
+                name: 'Priya Nair',
+                track: 'Data & AI',
                 persona: 'Graduate (60/60 Days)',
                 quote: 'Completing all 60 days gave me a full-stack portfolio on GitHub that landed me my software engineering internship offer.',
                 proof: 'Full Capstone Showcase Complete'
@@ -213,7 +253,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
           </p>
           <button
             onClick={onStart}
-            className="px-8 py-4 rounded-xl bg-white text-indigo-900 font-extrabold text-base hover:bg-slate-100 transition-all shadow-lg hover:scale-[1.02]"
+            className="px-8 py-4 rounded-xl bg-white text-indigo-900 font-extrabold text-base hover:bg-slate-100 transition-all shadow-lg hover:scale-[1.02] min-h-[44px]"
           >
             Start Your 60-Day Journey Now
           </button>

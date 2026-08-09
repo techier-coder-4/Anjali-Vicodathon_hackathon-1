@@ -11,6 +11,7 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthView } from './components/AuthView';
 import { getChallengeByDay, CHALLENGES } from './data/curriculum';
+import { AuthService } from './services/auth';
 import { AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const MainApp: React.FC = () => {
@@ -42,11 +43,19 @@ const MainApp: React.FC = () => {
     if (path === '/dashboard') return 'dashboard';
     if (path === '/journey') return 'journey';
     if (path === '/profile') return 'profile';
+    if (user && (path === '/' || path === '')) return 'dashboard';
     return 'landing';
   };
 
   const handleTabSelect = (tab: 'landing' | 'dashboard' | 'journey' | 'profile' | 'challenge') => {
-    if (tab === 'landing') navigateTo('/');
+    if (tab === 'landing') {
+      if (user) {
+        if (!user.onboardingCompleted) navigateTo('/onboarding');
+        else navigateTo('/dashboard');
+      } else {
+        navigateTo('/');
+      }
+    }
     else if (tab === 'dashboard') {
       if (!user) navigateTo('/login');
       else if (!user.onboardingCompleted) navigateTo('/onboarding');
@@ -63,6 +72,19 @@ const MainApp: React.FC = () => {
       else navigateTo(`/day/${progress?.currentDay || 1}`);
     }
   };
+
+  // Redirect authenticated user if on public root or auth page
+  useEffect(() => {
+    if (user) {
+      if (path === '/' || path === '' || path === '/login' || path === '/signup') {
+        if (!user.onboardingCompleted) {
+          navigateTo('/onboarding');
+        } else {
+          navigateTo('/dashboard');
+        }
+      }
+    }
+  }, [user?.id, user?.persona]);
 
   const handleStartJourney = () => {
     if (!user) {
@@ -86,8 +108,29 @@ const MainApp: React.FC = () => {
 
   // Route rendering logic & protection checks
   const renderContent = () => {
-    // 1. PUBLIC ROUTES
+    // 1. PUBLIC ROUTES (When user is not logged in)
     if (path === '/' || path === '') {
+      if (user) {
+        if (!user.onboardingCompleted) {
+          return (
+            <div className="py-8">
+              <OnboardingModal
+                isOpen={true}
+                onClose={() => navigateTo('/dashboard')}
+                onComplete={() => navigateTo('/dashboard')}
+              />
+            </div>
+          );
+        }
+        return (
+          <Dashboard
+            onSelectDay={handleSelectDay}
+            onOpenJourney={() => navigateTo('/journey')}
+            onOpenProfile={() => navigateTo('/profile')}
+          />
+        );
+      }
+
       return (
         <LandingPage
           onStart={handleStartJourney}
@@ -97,11 +140,33 @@ const MainApp: React.FC = () => {
     }
 
     if (path === '/login') {
+      if (user) {
+        if (!user.onboardingCompleted) {
+          return (
+            <div className="py-8">
+              <OnboardingModal
+                isOpen={true}
+                onClose={() => navigateTo('/dashboard')}
+                onComplete={() => navigateTo('/dashboard')}
+              />
+            </div>
+          );
+        }
+        return (
+          <Dashboard
+            onSelectDay={handleSelectDay}
+            onOpenJourney={() => navigateTo('/journey')}
+            onOpenProfile={() => navigateTo('/profile')}
+          />
+        );
+      }
+
       return (
         <AuthView
           initialTab="login"
-          onSuccess={() => {
-            if (user && !user.onboardingCompleted) {
+          onSuccess={(loggedInUser) => {
+            const activeUser = loggedInUser || user;
+            if (activeUser && !activeUser.onboardingCompleted) {
               navigateTo('/onboarding');
             } else {
               navigateTo('/dashboard');
@@ -113,10 +178,38 @@ const MainApp: React.FC = () => {
     }
 
     if (path === '/signup') {
+      if (user) {
+        if (!user.onboardingCompleted) {
+          return (
+            <div className="py-8">
+              <OnboardingModal
+                isOpen={true}
+                onClose={() => navigateTo('/dashboard')}
+                onComplete={() => navigateTo('/dashboard')}
+              />
+            </div>
+          );
+        }
+        return (
+          <Dashboard
+            onSelectDay={handleSelectDay}
+            onOpenJourney={() => navigateTo('/journey')}
+            onOpenProfile={() => navigateTo('/profile')}
+          />
+        );
+      }
+
       return (
         <AuthView
           initialTab="signup"
-          onSuccess={() => navigateTo('/onboarding')}
+          onSuccess={(signedUpUser) => {
+            const activeUser = signedUpUser || user;
+            if (activeUser && !activeUser.onboardingCompleted) {
+              navigateTo('/onboarding');
+            } else {
+              navigateTo('/dashboard');
+            }
+          }}
           onNavigateHome={() => navigateTo('/')}
         />
       );
@@ -221,7 +314,15 @@ const MainApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-slate-900 font-sans antialiased flex flex-col selection:bg-slate-900 selection:text-white">
       {/* Top Judge Persona Switcher Bar */}
-      <PersonaSwitcher />
+      <PersonaSwitcher
+        onPersonaSwitched={() => {
+          const updated = AuthService.getCurrentUser();
+          if (updated) {
+            if (!updated.onboardingCompleted) navigateTo('/onboarding');
+            else navigateTo('/dashboard');
+          }
+        }}
+      />
 
       {/* Primary Sticky Navigation Header */}
       <Navbar

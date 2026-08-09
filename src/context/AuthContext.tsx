@@ -7,10 +7,20 @@ interface AuthContextType {
   user: User | null;
   progress: UserProgressState;
   persona: StudentPersona;
-  switchPersona: (persona: StudentPersona) => void;
-  login: (email: string) => void;
-  signUp: (name: string, email: string, track: TrackType, level: ExperienceLevel, goal: string) => void;
-  updateUserOnboarding: (track: TrackType, level: ExperienceLevel, goal: string) => void;
+  switchPersona: (persona: StudentPersona) => User;
+  login: (email: string, password?: string) => User;
+  signUp: (
+    name: string,
+    email: string,
+    password?: string,
+    track?: TrackType,
+    level?: ExperienceLevel,
+    goal?: string,
+    college?: string,
+    graduationYear?: string
+  ) => User;
+  updateUserOnboarding: (track: TrackType, level: ExperienceLevel, goal: string, college?: string, graduationYear?: string, timeGoal?: string) => void;
+  updateUserProfile: (data: Partial<User>) => void;
   logout: () => void;
   toggleRequirement: (dayId: number, reqIndex: number) => void;
   submitProofOfWork: (dayId: number, repoUrl: string, linkedinUrl: string, checkpointData?: CheckpointData) => string[];
@@ -50,32 +60,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user?.id]);
 
-  const switchPersona = (newPersona: StudentPersona) => {
+  const switchPersona = (newPersona: StudentPersona): User => {
     const { user: updatedUser, progress: updatedProgress } = AuthService.switchPersona(newPersona);
     setUser(updatedUser);
     setProgress(updatedProgress);
+    return updatedUser;
   };
 
-  const login = (email: string) => {
-    const { user: loggedInUser, progress: loggedInProg } = AuthService.login(email);
+  const login = (email: string, password?: string): User => {
+    const { user: loggedInUser, progress: loggedInProg } = AuthService.login(email, password);
     setUser(loggedInUser);
     setProgress(loggedInProg);
+    return loggedInUser;
   };
 
-  const signUp = (name: string, email: string, track: TrackType, level: ExperienceLevel, goal: string) => {
-    const { user: signedUpUser, progress: signedUpProg } = AuthService.signUp(name, email, track, level, goal);
+  const signUp = (
+    name: string,
+    email: string,
+    password?: string,
+    track: TrackType = 'frontend',
+    level: ExperienceLevel = 'beginner',
+    goal: string = 'Build consistency over 60 days',
+    college?: string,
+    graduationYear?: string
+  ): User => {
+    const { user: signedUpUser, progress: signedUpProg } = AuthService.signUp(
+      name,
+      email,
+      password,
+      track,
+      level,
+      goal,
+      college,
+      graduationYear
+    );
     setUser(signedUpUser);
     setProgress(signedUpProg);
+    return signedUpUser;
   };
 
-  const updateUserOnboarding = (track: TrackType, level: ExperienceLevel, goal: string) => {
+  const updateUserOnboarding = (
+    track: TrackType,
+    level: ExperienceLevel,
+    goal: string,
+    college?: string,
+    graduationYear?: string,
+    timeGoal?: string
+  ) => {
     if (!user) return;
     const updatedUser: User = {
       ...user,
       track,
       experienceLevel: level,
       primaryGoal: goal,
+      college: college || user.college,
+      graduationYear: graduationYear || user.graduationYear,
+      dailyTimeGoal: timeGoal || user.dailyTimeGoal,
       onboardingCompleted: true
+    };
+    AuthService.saveUser(updatedUser);
+    setUser(updatedUser);
+  };
+
+  const updateUserProfile = (data: Partial<User>) => {
+    if (!user) return;
+    const updatedUser: User = {
+      ...user,
+      ...data
     };
     AuthService.saveUser(updatedUser);
     setUser(updatedUser);
@@ -130,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         signUp,
         updateUserOnboarding,
+        updateUserProfile,
         logout,
         toggleRequirement,
         submitProofOfWork,

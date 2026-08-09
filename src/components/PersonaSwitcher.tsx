@@ -3,7 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { StudentPersona } from '../types';
 import { UserCheck, Zap, AlertCircle, Award, SlidersHorizontal, X } from 'lucide-react';
 
-export const PersonaSwitcher: React.FC = () => {
+interface PersonaSwitcherProps {
+  onPersonaSwitched?: () => void;
+}
+
+export const PersonaSwitcher: React.FC<PersonaSwitcherProps> = ({ onPersonaSwitched }) => {
   const { persona, switchPersona, user } = useAuth();
   
   // Dev mode is active if URL contains ?dev=true or ?debug=true or localStorage is set
@@ -102,7 +106,10 @@ export const PersonaSwitcher: React.FC = () => {
             return (
               <button
                 key={p.id}
-                onClick={() => switchPersona(p.id)}
+                onClick={() => {
+                  switchPersona(p.id);
+                  if (onPersonaSwitched) onPersonaSwitched();
+                }}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all flex items-center gap-1.5 whitespace-nowrap ${
                   isActive
                     ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'

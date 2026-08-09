@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Challenge, CheckpointData } from '../types';
 import { AIMentor } from './AIMentor';
+import { AIVideoPlayer } from './AIVideoPlayer';
 import { CheckCircle2, Circle, Clock, ShieldCheck, Github, Linkedin, ArrowLeft, ArrowRight, Sparkles, HelpCircle, Check, AlertCircle } from 'lucide-react';
 
 interface DailyChallengeViewProps {
@@ -189,6 +190,9 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column (8 cols) */}
         <div className="lg:col-span-7 space-y-8">
+          {/* AI MOTIVATIONAL VIDEO PLAYER (45-75s) */}
+          <AIVideoPlayer challenge={challenge} />
+
           {/* Goals & Why It Matters */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
