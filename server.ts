@@ -133,6 +133,82 @@ PEDAGOGICAL RULES (CRITICAL):
     }
   });
 
+  // AI Roadmap Generation API
+  app.post('/api/gemini/generate-roadmap', async (req: Request, res: Response) => {
+    const { goalTitle, category, experienceLevel, dailyTimeGoal, finalOutcome } = req.body;
+
+    if (!ai) {
+      return res.json({
+        success: false,
+        message: 'Gemini AI API key not configured. Using starter roadmap fallback.'
+      });
+    }
+
+    try {
+      const prompt = `Generate a structured, beginner-friendly 60-day technical learning and building roadmap for a student.
+
+STUDENT PROFILE:
+- Goal: "${goalTitle || category || 'Custom Goal'}"
+- Track Category: ${category || 'Software Development'}
+- Current Skill Level: ${experienceLevel || 'beginner'}
+- Daily Time Commitment: ${dailyTimeGoal || '30-45 minutes'}
+- Final Desired Outcome: "${finalOutcome || 'Build real-world projects and become confident'}"
+
+REQUIREMENTS:
+1. Return a JSON array containing exactly 60 day objects (Day 1 through Day 60).
+2. Format MUST be strictly JSON (no markdown formatting outside the json block, pure JSON array or object with key "roadmap").
+3. Each day object must contain:
+   - dayId: number (1 to 60)
+   - title: string (short, engaging, action-oriented title)
+   - whyItMatters: string (plain English explanation of why this concept/skill matters)
+   - whatToLearn: string (core concept to read/understand)
+   - whatToBuild: string (practical mini-project or code exercise to build today)
+   - expectedOutcome: string (clear tangible outcome after finishing today)
+   - estimatedMinutes: number (e.g. 20, 30, 45, 60)
+   - skills: string[] (1-3 relevant skills/keywords)
+   - curiosityPrompt: string (a thought-provoking question for reflection)
+
+Maintain a progressive curriculum structure:
+- Days 1-10: Fundamentals & Core Mechanics
+- Days 11-25: Practical Building & Component Design
+- Days 26-35: Experimentation & Debugging
+- Days 36-45: Real-World Architecture & Integrations
+- Days 46-55: Capstone Project Construction
+- Days 56-60: Showcase & Interview Preparation`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.7
+        }
+      });
+
+      const responseText = response.text || '';
+      const parsedData = JSON.parse(responseText);
+      const roadmapArray = Array.isArray(parsedData) ? parsedData : (parsedData.roadmap || parsedData.days || []);
+
+      if (roadmapArray && roadmapArray.length > 0) {
+        return res.json({
+          success: true,
+          roadmap: roadmapArray
+        });
+      }
+
+      return res.json({
+        success: false,
+        message: 'Could not parse structured roadmap JSON.'
+      });
+    } catch (err: any) {
+      console.error('Error generating AI roadmap:', err?.message || err);
+      return res.json({
+        success: false,
+        message: 'AI generation error. Falling back to local template.'
+      });
+    }
+  });
+
   // Vite middleware in development
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');

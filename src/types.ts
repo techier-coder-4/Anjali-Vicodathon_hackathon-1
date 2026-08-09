@@ -70,6 +70,31 @@ export interface Achievement {
   unlockedAt?: string;
 }
 
+export interface CustomChallengeRoadmapDay {
+  dayId: number;
+  title: string;
+  whyItMatters: string;
+  whatToLearn: string;
+  whatToBuild: string;
+  expectedOutcome: string;
+  estimatedMinutes: number;
+  curiosityPrompt?: string;
+  skills: string[];
+}
+
+export interface CustomChallenge {
+  id: string;
+  userId: string;
+  goalTitle: string;
+  category: string;
+  experienceLevel: ExperienceLevel;
+  dailyTimeGoal: string;
+  finalOutcome: string;
+  roadmap: CustomChallengeRoadmapDay[];
+  createdAt: string;
+  activeDay: number;
+}
+
 export interface UserProgressState {
   userId: string;
   currentDay: number;
@@ -81,6 +106,8 @@ export interface UserProgressState {
   dayProgresses: Record<number, DayProgress>;
   joinedCommunityChallengeIds?: string[];
   completedCommunityChallengeIds?: string[];
+  activeMode?: 'track' | 'custom';
+  activeCustomChallengeId?: string;
 }
 
 export interface CommunityChallenge {

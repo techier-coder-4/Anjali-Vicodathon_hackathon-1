@@ -196,7 +196,11 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
                     : 'bg-gray-100 text-slate-600'
                 }`}
               >
-                {dayProg.understandingStatus}
+                {dayProg.understandingStatus === 'understood'
+                  ? 'Understood'
+                  : dayProg.understandingStatus === 'needs_revisiting'
+                  ? 'Needs Revisiting'
+                  : 'Not checked yet'}
               </span>
             </div>
           </div>
