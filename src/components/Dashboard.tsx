@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CHALLENGES, getChallengeByDay } from '../data/curriculum';
+import { CHALLENGES, getChallengeByDay, getRoadmapForTrack } from '../data/curriculum';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
 import { Flame, Clock, Trophy, ArrowRight, ShieldCheck, Sparkles, RefreshCw, Layers, Award, CheckCircle2, Target, Zap } from 'lucide-react';
 
@@ -14,7 +14,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
   const { user, progress } = useAuth();
 
   const currentDay = progress.currentDay || 1;
-  const currentChallenge = getChallengeByDay(currentDay) || CHALLENGES[0];
+  const currentChallenge = getChallengeByDay(currentDay, user?.track) || CHALLENGES[0];
   const completedCount = progress.completedDays.length;
   const progressPercent = Math.round((completedCount / 60) * 100);
   const missedCount = progress.missedDays.length;

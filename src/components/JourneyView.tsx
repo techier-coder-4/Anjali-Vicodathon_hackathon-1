@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CHALLENGES, STAGE_NAMES } from '../data/curriculum';
+import { getRoadmapForTrack, STAGE_NAMES } from '../data/curriculum';
 import { CurriculumStage, Challenge } from '../types';
 import { CheckCircle2, Clock, ShieldCheck, Flame, Filter, ChevronRight, AlertCircle, ArrowUpRight } from 'lucide-react';
 
@@ -9,15 +9,16 @@ interface JourneyViewProps {
 }
 
 export const JourneyView: React.FC<JourneyViewProps> = ({ onSelectDay }) => {
-  const { progress } = useAuth();
+  const { user, progress } = useAuth();
   const [stageFilter, setStageFilter] = useState<CurriculumStage | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'missed' | 'upcoming'>('all');
 
   const currentDay = progress.currentDay || 1;
 
   const stages: CurriculumStage[] = ['discover', 'build', 'experiment', 'real-world', 'build-your-own', 'showcase'];
+  const roadmapChallenges = getRoadmapForTrack(user?.track || 'fullstack');
 
-  const filteredChallenges = CHALLENGES.filter((c) => {
+  const filteredChallenges = roadmapChallenges.filter((c) => {
     if (stageFilter !== 'all' && c.stage !== stageFilter) return false;
 
     const isCompleted = progress.completedDays.includes(c.dayId);

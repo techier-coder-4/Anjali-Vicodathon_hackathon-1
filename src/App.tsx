@@ -199,7 +199,7 @@ const MainApp: React.FC = () => {
         );
       }
 
-      const challenge = getChallengeByDay(dayId) || CHALLENGES[0];
+      const challenge = getChallengeByDay(dayId, user?.track) || CHALLENGES[0];
       return (
         <DailyChallengeView
           challenge={challenge}

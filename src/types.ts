@@ -1,4 +1,4 @@
-export type TrackType = 'fullstack' | 'frontend' | 'backend' | 'ai';
+export type TrackType = 'frontend' | 'backend' | 'fullstack' | 'python' | 'data-ai';
 export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
 export type StudentPersona = 'new' | 'active' | 'inconsistent' | 'completed';
 
@@ -21,6 +21,7 @@ export type CurriculumStage = 'discover' | 'build' | 'experiment' | 'real-world'
 
 export interface Challenge {
   dayId: number;
+  trackId: TrackType;
   title: string;
   description: string;
   requirements: string[];
@@ -30,6 +31,8 @@ export interface Challenge {
   difficulty: DifficultyLevel;
   estimatedMinutes: number;
   curiosityPrompt: string;
+  skills: string[];
+  tools: string[];
   stage: CurriculumStage;
   stageName: string;
 }

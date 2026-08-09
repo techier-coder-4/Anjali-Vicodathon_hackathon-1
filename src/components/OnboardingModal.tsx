@@ -29,7 +29,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
     { id: 'fullstack', title: 'Full-Stack Web', desc: 'React, Node.js, Express, state, APIs & capstones', icon: <Layers className="w-5 h-5 text-indigo-600" /> },
     { id: 'frontend', title: 'Frontend Engineering', desc: 'DOM, React, UI performance, accessibility & CSS', icon: <Code className="w-5 h-5 text-blue-600" /> },
     { id: 'backend', title: 'Backend Systems', desc: 'Node, Express, APIs, validation, auth & caching', icon: <Cpu className="w-5 h-5 text-emerald-600" /> },
-    { id: 'ai', title: 'AI & Applied Software', desc: 'Full-stack integrations, LLM prompts & AI tools', icon: <Sparkles className="w-5 h-5 text-purple-600" /> }
+    { id: 'python', title: 'Python Engineering', desc: 'Core Python, OOP, automation, frameworks & async', icon: <Code className="w-5 h-5 text-amber-600" /> },
+    { id: 'data-ai', title: 'Data & AI Engineering', desc: 'Data processing, PyTorch, LLMs, RAG & MLOps', icon: <Sparkles className="w-5 h-5 text-purple-600" /> }
   ];
 
   const levels: { id: ExperienceLevel; label: string; desc: string }[] = [
