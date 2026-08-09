@@ -80,6 +80,7 @@ export interface UserProgressState {
   unlockedAchievementIds: string[];
   dayProgresses: Record<number, DayProgress>;
   joinedCommunityChallengeIds?: string[];
+  completedCommunityChallengeIds?: string[];
 }
 
 export interface CommunityChallenge {
@@ -93,12 +94,14 @@ export interface CommunityChallenge {
   durationLabel: string;
   estimatedTime: string;
   participantsCount: number;
-  status: 'upcoming' | 'active' | 'joined' | 'completed';
-  ctaText: string;
+  statusType: 'upcoming' | 'ongoing' | 'completed';
   skills: string[];
   rules: string[];
   rewardBadge: string;
   projectPrompt: string;
+  whoItIsFor?: string;
+  whatYoullBuild?: string;
+  submissionExpectations?: string;
 }
 
 export interface VideoScriptSection {

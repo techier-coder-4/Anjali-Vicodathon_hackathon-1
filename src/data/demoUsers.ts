@@ -35,6 +35,8 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
       completedDays: [],
       missedDays: [],
       unlockedAchievementIds: [],
+      joinedCommunityChallengeIds: [],
+      completedCommunityChallengeIds: [],
       dayProgresses: {
         1: {
           dayId: 1,
@@ -72,6 +74,8 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
       completedDays: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       missedDays: [],
       unlockedAchievementIds: ['first_build', 'streak_3', 'streak_7', 'first_project'],
+      joinedCommunityChallengeIds: ['cc_weekend_weather', 'cc_js_sprint'],
+      completedCommunityChallengeIds: ['cc_js_sprint'],
       dayProgresses: (() => {
         const progs: Record<number, DayProgress> = {};
         for (let i = 1; i <= 12; i++) {
@@ -127,6 +131,8 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
       completedDays: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 25],
       missedDays: [19, 21, 24, 26],
       unlockedAchievementIds: ['first_build', 'streak_3', 'streak_7', 'streak_14', 'first_project'],
+      joinedCommunityChallengeIds: ['cc_api_challenge'],
+      completedCommunityChallengeIds: [],
       dayProgresses: (() => {
         const progs: Record<number, DayProgress> = {};
         const completed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 25];
@@ -177,6 +183,8 @@ export const DEMO_USERS: Record<string, { user: User; progress: UserProgressStat
       completedDays: Array.from({ length: 60 }, (_, i) => i + 1),
       missedDays: [],
       unlockedAchievementIds: ['first_build', 'streak_3', 'streak_7', 'streak_14', 'first_project', 'streak_30', 'builder_45', 'completion_60'],
+      joinedCommunityChallengeIds: ['cc_weekend_weather', 'cc_js_sprint', 'cc_open_source', 'cc_debugging_sprint'],
+      completedCommunityChallengeIds: ['cc_js_sprint', 'cc_open_source'],
       dayProgresses: (() => {
         const progs: Record<number, DayProgress> = {};
         for (let i = 1; i <= 60; i++) {

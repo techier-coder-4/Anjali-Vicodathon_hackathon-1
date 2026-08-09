@@ -7,6 +7,7 @@ import { Dashboard } from './components/Dashboard';
 import { JourneyView } from './components/JourneyView';
 import { DailyChallengeView } from './components/DailyChallengeView';
 import { ProfileView } from './components/ProfileView';
+import { ChallengesView } from './components/ChallengesView';
 import { OnboardingModal } from './components/OnboardingModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthView } from './components/AuthView';
@@ -38,16 +39,17 @@ const MainApp: React.FC = () => {
   };
 
   // Convert tab IDs to paths for Navbar compatibility
-  const getTabFromPath = (): 'landing' | 'dashboard' | 'journey' | 'profile' | 'challenge' => {
+  const getTabFromPath = (): 'landing' | 'dashboard' | 'journey' | 'challenges' | 'profile' | 'challenge' => {
     if (path.startsWith('/day/')) return 'challenge';
     if (path === '/dashboard') return 'dashboard';
     if (path === '/journey') return 'journey';
+    if (path === '/challenges') return 'challenges';
     if (path === '/profile') return 'profile';
     if (user && (path === '/' || path === '')) return 'dashboard';
     return 'landing';
   };
 
-  const handleTabSelect = (tab: 'landing' | 'dashboard' | 'journey' | 'profile' | 'challenge') => {
+  const handleTabSelect = (tab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'profile' | 'challenge') => {
     if (tab === 'landing') {
       if (user) {
         if (!user.onboardingCompleted) navigateTo('/onboarding');
@@ -62,6 +64,7 @@ const MainApp: React.FC = () => {
       else navigateTo('/dashboard');
     }
     else if (tab === 'journey') navigateTo('/journey');
+    else if (tab === 'challenges') navigateTo('/challenges');
     else if (tab === 'profile') {
       if (!user) navigateTo('/login');
       else navigateTo('/profile');
@@ -260,7 +263,12 @@ const MainApp: React.FC = () => {
       );
     }
 
-    // 5. PROFILE ROUTE
+    // 5. CHALLENGES ROUTE
+    if (path === '/challenges') {
+      return <ChallengesView />;
+    }
+
+    // 6. PROFILE ROUTE
     if (path === '/profile') {
       return <ProfileView />;
     }
