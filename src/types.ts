@@ -104,6 +104,21 @@ export interface CommunityChallenge {
   submissionExpectations?: string;
 }
 
+export interface VisualSceneChoreography {
+  theme?: 'network' | 'frontend' | 'security' | 'database' | 'ai' | 'cloud' | 'code';
+  cameraZoom?: number;
+  cameraPanX?: number;
+  cameraPanY?: number;
+  environmentGlow?: string;
+  statusState?: 'normal' | 'problem' | 'breakthrough' | 'solution' | 'success';
+  primaryActorName?: string;
+  secondaryActorName?: string;
+  activeCodeSnippet?: string;
+  focusHighlightLabel?: string;
+  particleSpeed?: number;
+  emphasisWords?: string[];
+}
+
 export interface VideoScriptSection {
   type: 'intro' | 'what' | 'why_matters' | 'where_used' | 'student_benefits' | 'today_mission' | 'motivation';
   title: string;
@@ -111,6 +126,7 @@ export interface VideoScriptSection {
   visualHook: string;
   durationSeconds: number;
   jargonTerms?: { term: string; simpleMeaning: string }[];
+  choreography?: VisualSceneChoreography;
 }
 
 export interface LearningVideoScript {
@@ -124,6 +140,8 @@ export interface LearningVideoScript {
   realWorldUses: string[];
   studentBenefits: string[];
   todayMissionSummary: string;
+  cinematicHook?: string;
+  cinematicEnding?: string;
 }
 
 export interface AIMessage {

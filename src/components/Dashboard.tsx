@@ -27,6 +27,7 @@ interface DashboardProps {
   onSelectDay: (dayId: number) => void;
   onOpenJourney: () => void;
   onOpenProfile: () => void;
+  onOpenLabs?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney, onOpenProfile }) => {

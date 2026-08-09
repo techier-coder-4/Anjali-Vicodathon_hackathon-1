@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Flame, LayoutDashboard, Compass, User as UserIcon, LogOut, Menu, X, Rocket, Sparkles, BookOpen, Layers, Target, HelpCircle, Trophy } from 'lucide-react';
+import { Flame, LayoutDashboard, Compass, User as UserIcon, LogOut, Menu, X, Rocket, Sparkles, BookOpen, Layers, Target, HelpCircle, Trophy, Terminal } from 'lucide-react';
 
 interface NavbarProps {
-  currentTab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'profile' | 'challenge';
-  setCurrentTab: (tab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'profile' | 'challenge') => void;
+  currentTab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'labs' | 'profile' | 'challenge';
+  setCurrentTab: (tab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'labs' | 'profile' | 'challenge') => void;
   openAuthModal: () => void;
   selectedDayForView?: number;
 }
@@ -34,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const authenticatedNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: 'journey', label: '60-Day Journey', icon: <Compass className="w-4 h-4" /> },
+    { id: 'labs', label: 'Practical Labs', icon: <Terminal className="w-4 h-4" /> },
     { id: 'challenges', label: 'Challenges', icon: <Trophy className="w-4 h-4" /> },
     { id: 'profile', label: 'Profile', icon: <UserIcon className="w-4 h-4" /> }
   ] as const;

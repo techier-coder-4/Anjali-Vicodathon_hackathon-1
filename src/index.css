@@ -8,4 +8,37 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  @keyframes cinematicFadeIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.97) translateY(8px);
+      filter: blur(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      filter: blur(0px);
+    }
+  }
+
+  @keyframes cameraPan {
+    0% {
+      transform: scale(1) translate(0px, 0px);
+    }
+    50% {
+      transform: scale(1.025) translate(-4px, -2px);
+    }
+    100% {
+      transform: scale(1) translate(0px, 0px);
+    }
+  }
+
+  .animate-fade {
+    animation: cinematicFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-camera-pan {
+    animation: cameraPan 14s ease-in-out infinite;
+  }
 }

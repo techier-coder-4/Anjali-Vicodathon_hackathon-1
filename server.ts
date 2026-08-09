@@ -213,6 +213,8 @@ PEDAGOGICAL RULES (CRITICAL):
         }
       ],
       transcript: `Ever wondered how modern applications work seamlessly? Today's concept is "${challengeTitle}". In simple words: ${learningObjective}. ${whyItMatters}. Real-world apps use this every day. Mastering this boosts your engineering confidence. Today's mission: ${description}. Now you know why this matters—let's build it!`,
+      cinematicHook: `Ever wondered how modern applications handle data and UI seamlessly for millions of users?`,
+      cinematicEnding: `Now you know why this matters in production. Your challenge today is to build it yourself. Let's see what you can do!`,
       fallbackExplanation: `${whyItMatters} Today's hands-on project gives you real portfolio proof!`,
       realWorldUses: ['Spotify', 'Instagram', 'Razorpay', 'Swiggy'],
       studentBenefits: ['Builds real production-ready software', 'Frequently asked in tech interviews', 'Enhances GitHub portfolio'],
@@ -224,7 +226,19 @@ PEDAGOGICAL RULES (CRITICAL):
     }
 
     try {
-      const prompt = `Generate a short 45-75 second motivational learning video script for a student starting today's technical challenge.
+      const prompt = `Generate a 45-75 second CINEMATIC ANIMATED SHORT FILM SCRIPT for a student learning software engineering.
+
+CRITICAL RULES FOR NARRATIVE STORYTELLING:
+1. ZERO SLIDE LECTURE: Do NOT mention slide numbers, section headers, or "Today we will learn".
+2. STORY FIRST: Start with a real, relatable situation ("Imagine working late at night...").
+3. NARRATIVE ARC:
+   - Act 1: Situation & Curiosity Hook
+   - Act 2: Real Problem (something breaks, fails, or gets blocked)
+   - Act 3: Consequence & Frustration
+   - Act 4: Discovery (today's concept unlocks the solution)
+   - Act 5: Real World Scale (how tech giants use this pattern)
+   - Act 6: Payoff & Action ("Now that you understand why this matters... it's your turn.")
+4. CONTINUOUS VOICE: The narration MUST read like ONE smooth, uninterrupted storytelling track.
 
 GROUNDING DATA:
 - Track: ${trackId || 'fullstack'}
@@ -236,23 +250,32 @@ GROUNDING DATA:
 - Description: ${description}
 - Requirements: ${reqList.join(', ')}
 
-Return valid JSON with:
+Return valid JSON:
 {
-  "durationSeconds": 65,
+  "durationSeconds": 60,
+  "cinematicHook": "Imagine working late on a project that works on your machine, but breaks the moment anyone else tries to run it...",
+  "cinematicEnding": "Now that you understand why this matters in production... it's your turn. Let's see what you can build today!",
   "sections": [
     {
-      "type": "intro" | "what" | "why_matters" | "where_used" | "student_benefits" | "today_mission" | "motivation",
-      "title": "Short section title",
-      "narration": "Friendly mentor narration text (1-2 sentences)",
-      "visualHook": "Visual graphic or animation prompt description",
+      "type": "intro" | "what" | "why_matters" | "where_used" | "today_mission" | "motivation",
+      "title": "Short internal scene tag",
+      "narration": "Conversational mentor storytelling sentence",
+      "visualHook": "Cinematic visual scene description",
       "durationSeconds": 10,
-      "jargonTerms": [ { "term": "API", "simpleMeaning": "a way for two apps to talk to each other" } ]
+      "jargonTerms": [ { "term": "API", "simpleMeaning": "a way for two apps to communicate" } ],
+      "choreography": {
+        "theme": "network" | "frontend" | "security" | "database" | "ai" | "cloud" | "code",
+        "cameraZoom": 1.2,
+        "statusState": "normal" | "problem" | "breakthrough" | "solution" | "success",
+        "environmentGlow": "#6366f1",
+        "emphasisWords": ["request", "blocked", "speed"]
+      }
     }
   ],
-  "transcript": "Full combined narration transcript string",
+  "transcript": "Full combined narration story transcript",
   "fallbackExplanation": "1-2 sentence quick summary explanation",
-  "realWorldUses": ["App 1", "App 2", "App 3"],
-  "studentBenefits": ["Benefit 1", "Benefit 2", "Benefit 3"],
+  "realWorldUses": ["Spotify", "Instagram", "Razorpay"],
+  "studentBenefits": ["Benefit 1", "Benefit 2"],
   "todayMissionSummary": "Summary of today's project"
 }`;
 
@@ -273,7 +296,9 @@ Return valid JSON with:
             trackId,
             dayId,
             challengeTitle,
-            durationSeconds: parsed.durationSeconds || 65,
+            durationSeconds: parsed.durationSeconds || 60,
+            cinematicHook: parsed.cinematicHook || fallbackScript.cinematicHook,
+            cinematicEnding: parsed.cinematicEnding || fallbackScript.cinematicEnding,
             sections: parsed.sections,
             transcript: parsed.transcript || fallbackScript.transcript,
             fallbackExplanation: parsed.fallbackExplanation || fallbackScript.fallbackExplanation,

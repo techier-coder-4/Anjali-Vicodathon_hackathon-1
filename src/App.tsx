@@ -8,6 +8,10 @@ import { JourneyView } from './components/JourneyView';
 import { DailyChallengeView } from './components/DailyChallengeView';
 import { ProfileView } from './components/ProfileView';
 import { ChallengesView } from './components/ChallengesView';
+import { LabCatalogView } from './components/labs/LabCatalogView';
+import { LabDashboard } from './components/labs/LabDashboard';
+import { LabAuthorStudio } from './components/labs/LabAuthorStudio';
+import { AutomatedQAModal } from './components/labs/AutomatedQAModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthView } from './components/AuthView';
@@ -22,6 +26,7 @@ const MainApp: React.FC = () => {
   const [path, setPath] = useState<string>(() => window.location.pathname || '/');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showQAModal, setShowQAModal] = useState(false);
 
   // Sync state with browser location
   useEffect(() => {
@@ -39,17 +44,18 @@ const MainApp: React.FC = () => {
   };
 
   // Convert tab IDs to paths for Navbar compatibility
-  const getTabFromPath = (): 'landing' | 'dashboard' | 'journey' | 'challenges' | 'profile' | 'challenge' => {
+  const getTabFromPath = (): 'landing' | 'dashboard' | 'journey' | 'challenges' | 'labs' | 'profile' | 'challenge' => {
     if (path.startsWith('/day/')) return 'challenge';
     if (path === '/dashboard') return 'dashboard';
     if (path === '/journey') return 'journey';
     if (path === '/challenges') return 'challenges';
+    if (path.startsWith('/labs')) return 'labs';
     if (path === '/profile') return 'profile';
     if (user && (path === '/' || path === '')) return 'dashboard';
     return 'landing';
   };
 
-  const handleTabSelect = (tab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'profile' | 'challenge') => {
+  const handleTabSelect = (tab: 'landing' | 'dashboard' | 'journey' | 'challenges' | 'labs' | 'profile' | 'challenge') => {
     if (tab === 'landing') {
       if (user) {
         if (!user.onboardingCompleted) navigateTo('/onboarding');
@@ -64,6 +70,7 @@ const MainApp: React.FC = () => {
       else navigateTo('/dashboard');
     }
     else if (tab === 'journey') navigateTo('/journey');
+    else if (tab === 'labs') navigateTo('/labs');
     else if (tab === 'challenges') navigateTo('/challenges');
     else if (tab === 'profile') {
       if (!user) navigateTo('/login');
@@ -268,7 +275,37 @@ const MainApp: React.FC = () => {
       return <ChallengesView />;
     }
 
-    // 6. PROFILE ROUTE
+    // 6. PRACTICAL LABS ROUTES
+    if (path === '/labs') {
+      return (
+        <LabCatalogView
+          onSelectLab={(labId) => navigateTo(`/labs/${labId}`)}
+          onOpenAuthorStudio={() => navigateTo('/labs/author')}
+          onRunQASuite={() => setShowQAModal(true)}
+        />
+      );
+    }
+
+    if (path === '/labs/author') {
+      return (
+        <LabAuthorStudio
+          onBackToCatalog={() => navigateTo('/labs')}
+          onOpenLab={(labId) => navigateTo(`/labs/${labId}`)}
+        />
+      );
+    }
+
+    if (path.startsWith('/labs/')) {
+      const labId = path.replace('/labs/', '').trim();
+      return (
+        <LabDashboard
+          labId={labId}
+          onBackToCatalog={() => navigateTo('/labs')}
+        />
+      );
+    }
+
+    // 7. PROFILE ROUTE
     if (path === '/profile') {
       return <ProfileView />;
     }
@@ -387,6 +424,11 @@ const MainApp: React.FC = () => {
         isOpen={showOnboardingModal}
         onClose={() => setShowOnboardingModal(false)}
         onComplete={() => navigateTo('/dashboard')}
+      />
+
+      <AutomatedQAModal
+        isOpen={showQAModal}
+        onClose={() => setShowQAModal(false)}
       />
     </div>
   );
