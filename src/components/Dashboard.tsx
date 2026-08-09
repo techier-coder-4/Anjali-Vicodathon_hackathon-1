@@ -4,6 +4,7 @@ import { CHALLENGES, getChallengeByDay } from '../data/curriculum';
 import { ALL_ACHIEVEMENTS } from '../data/achievements';
 import { COMMUNITY_CHALLENGES } from '../data/communityChallenges';
 import { CommunityChallenge } from '../types';
+import { LabService } from '../services/labService';
 import {
   Flame,
   Clock,
@@ -20,7 +21,9 @@ import {
   CheckCircle2,
   X,
   Target,
-  Bot
+  Bot,
+  Terminal,
+  Play
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -30,7 +33,7 @@ interface DashboardProps {
   onOpenLabs?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney, onOpenProfile }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney, onOpenProfile, onOpenLabs }) => {
   const { user, progress } = useAuth();
   const [selectedChallenge, setSelectedChallenge] = useState<CommunityChallenge | null>(null);
   const [joinedChallengeIds, setJoinedChallengeIds] = useState<string[]>(
@@ -207,6 +210,73 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectDay, onOpenJourney
           </div>
         </div>
       )}
+
+      {/* Recommended Practical Lab for Active Track */}
+      {(() => {
+        const recommendedLabs = LabService.getLabs({ trackCategory: user?.track });
+        const recommendedLab = recommendedLabs[0] || LabService.getLabs()[0];
+
+        if (!recommendedLab) return null;
+
+        return (
+          <div className="bg-white rounded-2xl border border-indigo-100 p-5 sm:p-6 shadow-2xs space-y-4 bg-gradient-to-r from-indigo-50/40 via-white to-sky-50/30">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-indigo-600 text-white shadow-2xs">
+                  <Terminal className="w-4 h-4" />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 tracking-wider">
+                      RECOMMENDED PRACTICE LAB
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      {recommendedLab.trackCategory} TRACK
+                    </span>
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-900 mt-0.5">
+                    {recommendedLab.title}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                  +{recommendedLab.xp} XP
+                </span>
+                <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                  ~{recommendedLab.estimatedMinutes} Mins
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {recommendedLab.scenario}
+            </p>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-indigo-50">
+              <div className="flex flex-wrap gap-1.5">
+                {recommendedLab.requiredSkills.slice(0, 3).map((skill, idx) => (
+                  <span key={idx} className="text-[10px] font-bold bg-white text-indigo-900 px-2.5 py-1 rounded-md border border-indigo-100">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  if (onOpenLabs) onOpenLabs();
+                  else window.location.hash = `/labs/${recommendedLab.id}`;
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs transition-all shadow-2xs flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                <span>Launch Practical Lab</span>
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 4. STATS METRICS GRID */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -87,6 +87,25 @@ export const AppContainer: React.FC<AppContainerProps> = ({ lab, onApiCallLog, o
   const [pingHostInput, setPingHostInput] = useState('127.0.0.1; cat /etc/iot_master.key');
   const [pingOutput, setPingOutput] = useState<string | null>(null);
 
+  // Interactive Code Playground States
+  const [flexDir, setFlexDir] = useState<'row' | 'column'>('row');
+  const [flexWrap, setFlexWrap] = useState<'nowrap' | 'wrap'>('nowrap');
+  const [alignItems, setAlignItems] = useState<'center' | 'flex-start' | 'stretch'>('center');
+  const [viewportWidth, setViewportWidth] = useState<number>(390);
+  const [flexResult, setFlexResult] = useState<string | null>(null);
+
+  const [httpMethod, setHttpMethod] = useState<string>('GET');
+  const [apiKeyHeader, setApiKeyHeader] = useState<string>('');
+  const [trackHeader, setTrackHeader] = useState<string>('backend');
+  const [apiResponse, setApiResponse] = useState<string | null>(null);
+
+  const [systemPrompt, setSystemPrompt] = useState<string>('You are an expert ABTalks AI Learning Guide.');
+  const [contextDoc, setContextDoc] = useState<string>('');
+  const [temperature, setTemperature] = useState<number>(0.2);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+
+  const [decisionThreshold, setDecisionThreshold] = useState<number>(0.85);
+
   const logApi = (method: string, path: string, status: number, body?: string) => {
     const time = new Date().toLocaleTimeString();
     const logItem = { id: `log_${Date.now()}`, method, path, status, body, time };
@@ -706,15 +725,427 @@ export const AppContainer: React.FC<AppContainerProps> = ({ lab, onApiCallLog, o
           </div>
         );
 
-      default:
+      case 'code_playground':
+      case 'interactive_builder':
+        if (lab.id === 'lab-fe-flexbox-01' || lab.slug === 'css-flexbox-responsive-grid') {
+          return (
+            <div className="space-y-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-sm">CSS Flexbox Live Layout Controls</h3>
+                    <p className="text-xs text-slate-500">Configure layout parameters to fix 390px mobile container overflow.</p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-700">
+                    <button
+                      onClick={() => setViewportWidth(390)}
+                      className={`px-3 py-1 rounded-lg transition-all ${viewportWidth === 390 ? 'bg-indigo-600 text-white shadow-2xs' : 'hover:bg-slate-200'}`}
+                    >
+                      390px (Mobile)
+                    </button>
+                    <button
+                      onClick={() => setViewportWidth(768)}
+                      className={`px-3 py-1 rounded-lg transition-all ${viewportWidth === 768 ? 'bg-indigo-600 text-white shadow-2xs' : 'hover:bg-slate-200'}`}
+                    >
+                      768px (Tablet)
+                    </button>
+                    <button
+                      onClick={() => setViewportWidth(1200)}
+                      className={`px-3 py-1 rounded-lg transition-all ${viewportWidth === 1200 ? 'bg-indigo-600 text-white shadow-2xs' : 'hover:bg-slate-200'}`}
+                    >
+                      1200px (Desktop)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-bold text-slate-700">
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">flex-direction</label>
+                    <select
+                      value={flexDir}
+                      onChange={(e) => setFlexDir(e.target.value as any)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="column">column (Stack Vertically)</option>
+                      <option value="row">row (Horizontal Row)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">flex-wrap</label>
+                    <select
+                      value={flexWrap}
+                      onChange={(e) => setFlexWrap(e.target.value as any)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="wrap">wrap (Allow Line Wrapping)</option>
+                      <option value="nowrap">nowrap (Strict Single Line)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">align-items</label>
+                    <select
+                      value={alignItems}
+                      onChange={(e) => setAlignItems(e.target.value as any)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="center">center</option>
+                      <option value="flex-start">flex-start</option>
+                      <option value="stretch">stretch</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Practical Workspace */}
+              <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4 text-white">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
+                      <span>📱 Mobile-First Responsive Layout Simulator</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400">Test and repair container flex properties across standard mobile and desktop viewports.</p>
+                  </div>
+
+                  {/* Device Viewport Switcher */}
+                  <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                    <button
+                      onClick={() => setViewportWidth(390)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewportWidth === 390 ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      📱 Mobile 390px
+                    </button>
+                    <button
+                      onClick={() => setViewportWidth(430)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewportWidth === 430 ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      📱 Mobile 430px
+                    </button>
+                    <button
+                      onClick={() => setViewportWidth(768)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewportWidth === 768 ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      💻 Tablet 768px
+                    </button>
+                    <button
+                      onClick={() => setViewportWidth(1200)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewportWidth === 1200 ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      🖥️ Desktop 1200px
+                    </button>
+                  </div>
+                </div>
+
+                {/* Broken State Notice */}
+                {viewportWidth === 390 && flexDir === 'row' && flexWrap === 'nowrap' && (
+                  <div className="p-3 bg-amber-950/80 border border-amber-800 rounded-xl text-amber-300 text-xs flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-extrabold text-amber-200">CURRENT PROBLEM AT 390px MOBILE:</strong>
+                      <span>The three product cards are arranged in a horizontal row without wrapping, causing them to extend beyond the 390px mobile screen bounds.</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* CSS Live Code Preview */}
+                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 flex items-center justify-between">
+                  <span>CSS Rules: display: flex; flex-direction: {flexDir}; flex-wrap: {flexWrap}; align-items: {alignItems};</span>
+                  <span className="text-slate-500 font-sans text-[10px]">Active Width: {viewportWidth}px</span>
+                </div>
+
+                {/* Simulated Device Screen Container */}
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto">
+                  <div
+                    className="mx-auto bg-slate-800 p-4 rounded-xl border border-slate-700 transition-all duration-300"
+                    style={{ width: `${Math.min(viewportWidth, 680)}px` }}
+                  >
+                    <div
+                      className="transition-all duration-200"
+                      style={{
+                        display: 'flex',
+                        flexDirection: viewportWidth <= 430 ? flexDir : 'row',
+                        flexWrap: flexWrap,
+                        alignItems: alignItems,
+                        gap: '12px'
+                      }}
+                    >
+                      <div className="bg-indigo-600 text-white p-3 rounded-xl text-xs font-bold flex-1 min-w-[120px] text-center shadow-2xs">
+                        Product Card #1
+                      </div>
+                      <div className="bg-indigo-600 text-white p-3 rounded-xl text-xs font-bold flex-1 min-w-[120px] text-center shadow-2xs">
+                        Product Card #2
+                      </div>
+                      <div className="bg-indigo-600 text-white p-3 rounded-xl text-xs font-bold flex-1 min-w-[120px] text-center shadow-2xs">
+                        Product Card #3
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-xs text-slate-400">
+                    Target: Fix 390px mobile layout by setting <code className="text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">flex-direction: column</code> and <code className="text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">flex-wrap: wrap</code>.
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      logApi('POST', '/api/layout/validate', 200, JSON.stringify({ flexDir, flexWrap, viewportWidth }));
+                      if (flexDir === 'column' && flexWrap === 'wrap') {
+                        setFlexResult('✓ SOLUTION VERIFIED!\n- No horizontal overflow at 390px\n- Cards stack vertically on mobile screens\n- Responsive Flexbox rules correctly implemented.');
+                      } else {
+                        setFlexResult('❌ VALIDATION FAILED: Layout still overflows on 390px mobile viewport. Select flex-direction: column and flex-wrap: wrap.');
+                      }
+                    }}
+                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-all shadow-2xs flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Check My Solution</span>
+                  </button>
+                </div>
+
+                {flexResult && (
+                  <div className={`p-4 rounded-xl font-mono text-xs border whitespace-pre-wrap ${flexResult.includes('VERIFIED') ? 'bg-emerald-950 text-emerald-300 border-emerald-800' : 'bg-rose-950 text-rose-300 border-rose-800'}`}>
+                    {flexResult}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (lab.id === 'lab-be-http-rest-01' || lab.slug === 'rest-api-inspector-custom-headers') {
+          return (
+            <div className="space-y-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <h3 className="font-extrabold text-slate-900 text-sm">HTTP Request Header Inspector</h3>
+                <p className="text-xs text-slate-500">Construct REST requests with custom headers to query student progress endpoints.</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-bold">
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">HTTP Method</label>
+                    <select
+                      value={httpMethod}
+                      onChange={(e) => setHttpMethod(e.target.value)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white"
+                    >
+                      <option value="GET">GET</option>
+                      <option value="POST">POST</option>
+                      <option value="PUT">PUT</option>
+                      <option value="DELETE">DELETE</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">Header: X-Api-Key</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. abtalks_secret_2026"
+                      value={apiKeyHeader}
+                      onChange={(e) => setApiKeyHeader(e.target.value)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">Header: X-Student-Track</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. backend"
+                      value={trackHeader}
+                      onChange={(e) => setTrackHeader(e.target.value)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl font-mono"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    logApi(httpMethod, '/api/v1/student/progress', apiKeyHeader === 'abtalks_secret_2026' ? 200 : 401);
+                    if (apiKeyHeader.trim() === 'abtalks_secret_2026') {
+                      setApiResponse(JSON.stringify({
+                        status: 200,
+                        message: "✓ SOLUTION VERIFIED: Request authenticated successfully with valid X-Api-Key.",
+                        track: trackHeader,
+                        verifiedRequirements: [
+                          "Valid X-Api-Key header supplied",
+                          "REST HTTP GET method passed",
+                          "Authorized student progress response returned"
+                        ]
+                      }, null, 2));
+                    } else {
+                      setApiResponse(JSON.stringify({
+                        status: 401,
+                        error: "Unauthorized",
+                        details: "Missing or invalid X-Api-Key header. Provide 'abtalks_secret_2026'"
+                      }, null, 2));
+                    }
+                  }}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Check My Solution</span>
+                </button>
+
+                {apiResponse && (
+                  <div className="p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl border border-slate-800 whitespace-pre-wrap">
+                    {apiResponse}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (lab.id === 'lab-ai-prompt-01' || lab.slug === 'system-prompt-grounding-context-injector') {
+          return (
+            <div className="space-y-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <h3 className="font-extrabold text-slate-900 text-sm">System Prompt & Context Grounding Editor</h3>
+                <p className="text-xs text-slate-500">Inject verified reference documents to ground the LLM mentor model.</p>
+
+                <div className="space-y-3 text-xs font-bold text-slate-700">
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">System Instructions</label>
+                    <input
+                      type="text"
+                      value={systemPrompt}
+                      onChange={(e) => setSystemPrompt(e.target.value)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-500 text-[11px] mb-1">Reference Context Document</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Paste verified curriculum requirements here (e.g. Day 14 requires Express middleware...)"
+                      value={contextDoc}
+                      onChange={(e) => setContextDoc(e.target.value)}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl font-mono text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-[11px] text-slate-500 mb-1">
+                      <span>Temperature: {temperature}</span>
+                      <span>(0.1 = Factual, 1.0 = Creative)</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.0"
+                      step="0.05"
+                      value={temperature}
+                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                      className="w-full accent-sky-600"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    logApi('POST', '/api/ai/generate', 200);
+                    if (contextDoc.trim().length > 10 && temperature <= 0.3) {
+                      setAiResult('✓ SOLUTION VERIFIED!\nAI Response (Grounded):\n"Based strictly on the provided Day 14 curriculum document, students must implement Express request logging middleware and IP rate limiters."\n\nVerified Criteria:\n- Temperature set to factual threshold (<=0.3)\n- Context reference document injected');
+                    } else {
+                      setAiResult('❌ VALIDATION FAILED:\nTemperature is too high (>0.3) or reference context is missing. Ensure temperature <= 0.3 and reference context is provided.');
+                    }
+                  }}
+                  className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Check My Solution</span>
+                </button>
+
+                {aiResult && (
+                  <div className={`p-4 rounded-xl font-mono text-xs border ${aiResult.includes('VERIFIED') ? 'bg-sky-950 text-sky-300 border-sky-800' : 'bg-amber-950 text-amber-300 border-amber-800'}`}>
+                    {aiResult}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (lab.id === 'lab-ai-confusion-matrix-02' || lab.slug === 'classification-metrics-confusion-matrix-evaluator') {
+          const tp = Math.round(100 * (1 - Math.abs(decisionThreshold - 0.52)));
+          const fp = Math.round(20 * (1 - decisionThreshold));
+          const fn = Math.round(80 * decisionThreshold);
+          const tn = 900;
+          const precision = tp / (tp + fp || 1);
+          const recall = tp / (tp + fn || 1);
+          const f1 = (2 * precision * recall) / (precision + recall || 1);
+
+          return (
+            <div className="space-y-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+                <h3 className="font-extrabold text-slate-900 text-sm">Classification Decision Threshold Evaluator</h3>
+                <p className="text-xs text-slate-500">Adjust probability threshold to maximize F1-Score on spam detection dataset.</p>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-slate-700">
+                    <span>Decision Threshold: {decisionThreshold.toFixed(2)}</span>
+                    <span className="text-indigo-600 font-extrabold">F1-Score: {(f1 * 100).toFixed(1)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.10"
+                    max="0.90"
+                    step="0.02"
+                    value={decisionThreshold}
+                    onChange={(e) => setDecisionThreshold(parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <span className="text-[10px] text-emerald-600 font-bold block">True Positives</span>
+                    <strong className="text-emerald-900 text-base font-black">{tp}</strong>
+                  </div>
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                    <span className="text-[10px] text-rose-600 font-bold block">False Positives</span>
+                    <strong className="text-rose-900 text-base font-black">{fp}</strong>
+                  </div>
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                    <span className="text-[10px] text-rose-600 font-bold block">False Negatives</span>
+                    <strong className="text-rose-900 text-base font-black">{fn}</strong>
+                  </div>
+                  <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl">
+                    <span className="text-[10px] text-sky-600 font-bold block">True Negatives</span>
+                    <strong className="text-sky-900 text-base font-black">{tn}</strong>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-xs space-y-1">
+                  <div>Precision: {(precision * 100).toFixed(1)}%</div>
+                  <div>Recall: {(recall * 100).toFixed(1)}%</div>
+                  <div className="text-emerald-400 font-bold">F1-Score: {(f1 * 100).toFixed(1)}%</div>
+                  {f1 >= 0.88 ? (
+                    <div className="pt-2 text-emerald-300 font-bold border-t border-slate-800">
+                      ✓ OPTIMAL THRESHOLD REACHED! F1-Score maximized at {(f1 * 100).toFixed(1)}%. Solution verified.
+                    </div>
+                  ) : (
+                    <div className="pt-2 text-amber-300 font-bold border-t border-slate-800">
+                      ⚠️ Adjust threshold slider (around 0.50 - 0.54) to reach F1-Score &gt;= 88%.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-4">
             <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto">
-              <Globe className="w-6 h-6" />
+              <Code className="w-6 h-6" />
             </div>
             <h3 className="font-bold text-slate-900 text-base">{getAppTitle()}</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Production portal instance active. Navigate sections, inspect API endpoints, or use the integrated terminal.
+              Interactive environment initialized. Execute tests, adjust parameters, or use the terminal console to solve objectives.
             </p>
           </div>
         );

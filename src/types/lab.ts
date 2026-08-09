@@ -1,3 +1,5 @@
+import { TrackType } from '../types';
+
 export type LabCategory =
   | 'browser'
   | 'api'
@@ -12,6 +14,15 @@ export type LabCategory =
   | 'boss'
   | 'mini_ctf'
   | 'exam';
+
+export type LabFormatType =
+  | 'playground'
+  | 'builder'
+  | 'terminal'
+  | 'editor'
+  | 'decision'
+  | 'debugging'
+  | 'app';
 
 export type RealisticAppType =
   | 'corporate_portal'
@@ -33,7 +44,9 @@ export type RealisticAppType =
   | 'inventory_system'
   | 'student_portal'
   | 'iot_dashboard'
-  | 'government_portal';
+  | 'government_portal'
+  | 'code_playground'
+  | 'interactive_builder';
 
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 
@@ -82,8 +95,8 @@ export interface ContainerSpec {
   image: string;
   port: number;
   status: 'running' | 'healthy' | 'restarting' | 'stopped';
-  cpuUsage: number; // percentage e.g. 1.2
-  memoryUsage: number; // MB e.g. 64
+  cpuUsage: number;
+  memoryUsage: number;
   healthCheckPassed: boolean;
   logs: string[];
 }
@@ -137,14 +150,19 @@ export interface Lab {
   id: string;
   slug: string;
   title: string;
+  trackCategory: TrackType;
   category: LabCategory;
+  labFormat?: LabFormatType;
   appType: RealisticAppType;
   difficulty: DifficultyLevel;
   xp: number;
   estimatedMinutes: number;
   requiredSkills: string[];
   scenario: string;
+  whyItMatters?: string;
+  whatYouWillLearn?: string[];
   objectives: string[];
+  relatedChallengeDays?: number[];
   status: LabLifecycleStatus;
   version: string;
   flags: LabFlag[];
@@ -156,6 +174,15 @@ export interface Lab {
   assets: LabAssetFile[];
   authorName: string;
   updatedAt: string;
+  codeTemplate?: string;
+  codeLanguage?: string;
+  interactiveSteps?: {
+    id: string;
+    title: string;
+    instructions: string;
+    options?: { label: string; value: string; isCorrect?: boolean }[];
+    solutionSnippet?: string;
+  }[];
 }
 
 export interface ActiveLabInstance {

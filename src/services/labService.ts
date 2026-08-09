@@ -8,6 +8,7 @@ import {
   DifficultyLevel,
   LabLifecycleStatus
 } from '../types/lab';
+import { TrackType } from '../types';
 import { LAB_CATALOG, getLabById } from '../data/labCatalog';
 
 const LAB_INSTANCE_KEY_PREFIX = 'webforge_lab_instance_';
@@ -15,6 +16,7 @@ const CUSTOM_LABS_KEY = 'webforge_custom_labs_catalog';
 
 export class LabService {
   static getLabs(filter?: {
+    trackCategory?: TrackType;
     category?: LabCategory;
     appType?: RealisticAppType;
     difficulty?: DifficultyLevel;
@@ -27,6 +29,7 @@ export class LabService {
     if (!filter) return allLabs;
 
     return allLabs.filter((lab) => {
+      if (filter.trackCategory && lab.trackCategory !== filter.trackCategory) return false;
       if (filter.category && lab.category !== filter.category) return false;
       if (filter.appType && lab.appType !== filter.appType) return false;
       if (filter.difficulty && lab.difficulty !== filter.difficulty) return false;
@@ -102,6 +105,26 @@ export class LabService {
     };
     this.saveActiveInstance(freshInstance);
     return freshInstance;
+  }
+
+  static completeLab(labId: string): { success: boolean; pointsAwarded: number } {
+    const lab = this.getLab(labId);
+    if (!lab) {
+      return { success: false, pointsAwarded: 0 };
+    }
+
+    const instance = this.getActiveInstance(labId);
+    let newlyAwarded = 0;
+
+    lab.flags.forEach((f) => {
+      if (!instance.solvedFlagIds.includes(f.id)) {
+        instance.solvedFlagIds.push(f.id);
+        newlyAwarded += f.points;
+      }
+    });
+
+    this.saveActiveInstance(instance);
+    return { success: true, pointsAwarded: newlyAwarded };
   }
 
   static validateFlag(

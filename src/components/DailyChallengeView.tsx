@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Challenge, CheckpointData } from '../types';
 import { AIMentor } from './AIMentor';
-import { AIVideoPlayer } from './AIVideoPlayer';
 import { CheckCircle2, Circle, Clock, ShieldCheck, Github, Linkedin, ArrowLeft, ArrowRight, Sparkles, HelpCircle, Check, AlertCircle } from 'lucide-react';
 
 interface DailyChallengeViewProps {
@@ -190,8 +189,19 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column (8 cols) */}
         <div className="lg:col-span-7 space-y-8">
-          {/* AI MOTIVATIONAL VIDEO PLAYER (45-75s) */}
-          <AIVideoPlayer challenge={challenge} />
+          {/* REAL-WORLD CONTEXT SCENARIO */}
+          <div className="bg-white rounded-2xl border border-indigo-100 p-6 shadow-2xs space-y-3 bg-gradient-to-r from-indigo-50/50 via-white to-sky-50/30">
+            <div className="flex items-center gap-2 text-indigo-900 font-extrabold text-xs uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>Imagine this...</span>
+            </div>
+            <p className="text-slate-800 text-sm font-medium leading-relaxed">
+              {challenge.whyItMatters || challenge.description}
+            </p>
+            <p className="text-xs text-slate-500">
+              Today you'll learn how engineering principles solve this real-world production challenge hands-on.
+            </p>
+          </div>
 
           {/* Goals & Why It Matters */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-6 space-y-5">
@@ -333,7 +343,7 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
               <ShieldCheck className="w-5 h-5 text-indigo-600" />
               <div>
                 <h3 className="text-base font-bold text-slate-900">Proof of Work Submission</h3>
-                <p className="text-xs text-slate-500">Provide public proof of your implementation to submit Day {challenge.dayId}</p>
+                <p className="text-xs text-slate-500">Provide verifiable proof of your implementation to complete Day {challenge.dayId}</p>
               </div>
             </div>
 
@@ -348,7 +358,7 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
               <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs space-y-1">
                 <p className="font-extrabold flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-600" />
-                  <span>Submitted Successfully! Activity Status: Submitted</span>
+                  <span>Submitted Successfully! Challenge Status: Completed</span>
                 </p>
                 {unlockedBadges.length > 0 && (
                   <p className="text-emerald-700 font-medium">
@@ -361,7 +371,7 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
             <form onSubmit={handleSubmitProof} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  GitHub Repository / Commit Link *
+                  GitHub Repository / Code Link *
                 </label>
                 <div className="relative">
                   <Github className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -374,6 +384,32 @@ export const DailyChallengeView: React.FC<DailyChallengeViewProps> = ({
                   />
                 </div>
               </div>
+
+              {challenge.trackId === 'frontend' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Live Demo / Vercel / Netlify URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://my-frontend-demo.vercel.app"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden"
+                  />
+                </div>
+              )}
+
+              {challenge.trackId === 'backend' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    API Endpoint / Health Route (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://my-backend-api.onrender.com/api/v1/health"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 outline-hidden font-mono"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">

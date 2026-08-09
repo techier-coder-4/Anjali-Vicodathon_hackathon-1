@@ -279,6 +279,8 @@ const MainApp: React.FC = () => {
     if (path === '/labs') {
       return (
         <LabCatalogView
+          categorySlug={null}
+          onNavigateCategory={(slug) => navigateTo(slug ? `/labs/${slug}` : '/labs')}
           onSelectLab={(labId) => navigateTo(`/labs/${labId}`)}
           onOpenAuthorStudio={() => navigateTo('/labs/author')}
           onRunQASuite={() => setShowQAModal(true)}
@@ -296,10 +298,24 @@ const MainApp: React.FC = () => {
     }
 
     if (path.startsWith('/labs/')) {
-      const labId = path.replace('/labs/', '').trim();
+      const subPath = path.replace('/labs/', '').trim();
+      const categorySlugs = ['frontend', 'backend', 'fullstack', 'data-ai', 'cybersecurity', 'python', 'java'];
+
+      if (categorySlugs.includes(subPath)) {
+        return (
+          <LabCatalogView
+            categorySlug={subPath}
+            onNavigateCategory={(slug) => navigateTo(slug ? `/labs/${slug}` : '/labs')}
+            onSelectLab={(labId) => navigateTo(`/labs/${labId}`)}
+            onOpenAuthorStudio={() => navigateTo('/labs/author')}
+            onRunQASuite={() => setShowQAModal(true)}
+          />
+        );
+      }
+
       return (
         <LabDashboard
-          labId={labId}
+          labId={subPath}
           onBackToCatalog={() => navigateTo('/labs')}
         />
       );

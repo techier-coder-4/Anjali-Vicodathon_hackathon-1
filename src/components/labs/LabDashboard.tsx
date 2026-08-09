@@ -188,51 +188,163 @@ export const LabDashboard: React.FC<LabDashboardProps> = ({ labId, onBackToCatal
 
         <div>
           <h1 className="text-lg sm:text-xl font-extrabold text-slate-900">{lab.title}</h1>
-          <p className="text-xs text-slate-600 mt-2 leading-relaxed">{lab.scenario}</p>
         </div>
 
-        {/* Objectives */}
-        <div className="pt-2">
-          <h4 className="text-xs font-bold text-slate-800 mb-2">Objectives:</h4>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
-            {lab.objectives.map((obj, i) => (
-              <li key={i} className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <ChevronRight className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                <span>{obj}</span>
-              </li>
-            ))}
-          </ul>
+        {/* Learning Clarity Structure (Scenario -> Mission -> Acceptance Criteria -> Why It Matters -> What You Will Learn) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100 text-xs">
+          {/* Left Column: Real-World Scenario & Mission */}
+          <div className="space-y-3">
+            <div className="bg-indigo-50/80 border border-indigo-100 p-4 rounded-xl space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-indigo-700 tracking-wider">
+                  🏢 Real-World Scenario
+                </span>
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md">Context</span>
+              </div>
+              <p className="text-slate-800 leading-relaxed font-medium">
+                {lab.scenario}
+              </p>
+            </div>
+
+            <div className="bg-slate-900 text-white p-4 rounded-xl space-y-1.5 shadow-xs">
+              <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
+                🎯 Your Mission
+              </span>
+              <p className="text-xs font-bold text-slate-100 leading-relaxed">
+                {lab.objectives[0] || 'Fix the issue in the interactive environment below.'}
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2">
+              <span className="text-[10px] font-black uppercase text-slate-600 tracking-wider block">
+                🧠 What You Will Learn
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {lab.requiredSkills.map((skill, i) => (
+                  <span key={i} className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-semibold text-[11px]">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Why This Matters & Acceptance Criteria */}
+          <div className="space-y-3">
+            <div className="bg-emerald-50/80 border border-emerald-100 p-4 rounded-xl space-y-1.5">
+              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider block">
+                💡 Why This Matters in Production
+              </span>
+              <p className="text-slate-800 leading-relaxed font-medium">
+                {lab.whyItMatters || 'Fixing layout overflows and API edge cases ensures your application delivers an uncompromising experience to all users across devices and networks.'}
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-200/90 p-4 rounded-xl space-y-2 shadow-2xs">
+              <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider block">
+                📋 Acceptance Criteria
+              </span>
+              <ul className="space-y-2">
+                {lab.objectives.map((obj, i) => (
+                  <li key={i} className="flex items-start gap-2.5 bg-slate-50 p-2 rounded-lg border border-slate-100 text-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={isLabCompleted}
+                      readOnly
+                      className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="font-medium text-xs">{obj}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Flag Submission Bar */}
+      {/* Validation / Solution Checking Console */}
       <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-md border border-slate-800 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Key className="w-5 h-5 text-amber-400" />
-            <h3 className="font-bold text-sm">Flag Submission Console</h3>
+            {lab.trackCategory === 'cybersecurity' || lab.category === 'mini_ctf' ? (
+              <>
+                <Key className="w-5 h-5 text-amber-400" />
+                <h3 className="font-bold text-sm">Security Flag Submission Console</h3>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-sm">Solution Verification Console</h3>
+              </>
+            )}
           </div>
           <span className="text-xs text-slate-400">
-            Solved: <strong className="text-emerald-400">{activeInstance.solvedFlagIds.length}</strong> / {lab.flags.length} Flags
+            {lab.trackCategory === 'cybersecurity' || lab.category === 'mini_ctf' ? (
+              <>
+                Solved: <strong className="text-emerald-400">{activeInstance.solvedFlagIds.length}</strong> / {lab.flags.length} Flags
+              </>
+            ) : (
+              <>
+                Lab Status: <strong className={isLabCompleted ? 'text-emerald-400' : 'text-amber-400'}>
+                  {isLabCompleted ? '🎉 Verified & Completed' : 'In Progress'}
+                </strong>
+              </>
+            )}
           </span>
         </div>
 
-        <form onSubmit={handleFlagSubmit} className="flex flex-wrap sm:flex-nowrap gap-2">
-          <input
-            type="text"
-            placeholder="WEBFORGE{...}"
-            value={flagInput}
-            onChange={(e) => setFlagInput(e.target.value)}
-            className="flex-1 bg-slate-950 text-emerald-400 border border-slate-800 rounded-xl px-4 py-2.5 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            type="submit"
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Submit Flag</span>
-          </button>
-        </form>
+        {lab.trackCategory === 'cybersecurity' || lab.category === 'mini_ctf' ? (
+          <form onSubmit={handleFlagSubmit} className="flex flex-wrap sm:flex-nowrap gap-2">
+            <input
+              type="text"
+              placeholder="WEBFORGE{...}"
+              value={flagInput}
+              onChange={(e) => setFlagInput(e.target.value)}
+              className="flex-1 bg-slate-950 text-emerald-400 border border-slate-800 rounded-xl px-4 py-2.5 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              type="submit"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Submit Security Flag</span>
+            </button>
+          </form>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+            <div className="text-xs text-slate-300">
+              {isLabCompleted ? (
+                <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" />
+                  All acceptance criteria verified! You earned +{lab.xp} XP.
+                </span>
+              ) : (
+                <span>Complete the tasks in the interactive workspace tab, then verify your solution.</span>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                const res = LabService.completeLab(lab.id);
+                if (res.success) {
+                  const updatedInst = LabService.getActiveInstance(lab.id);
+                  setActiveInstance(updatedInst);
+                  if (res.pointsAwarded > 0 && onUpdateXP) {
+                    onUpdateXP(res.pointsAwarded);
+                  }
+                  setFlagFeedback({
+                    success: true,
+                    message: `🎉 Challenge Complete! Verified all acceptance criteria. +${lab.xp} XP awarded.`
+                  });
+                }
+              }}
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Check My Solution</span>
+            </button>
+          </div>
+        )}
 
         {flagFeedback.message && (
           <div
