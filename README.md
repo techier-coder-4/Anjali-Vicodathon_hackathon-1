@@ -7,7 +7,6 @@ A 60-day learning and consistency platform for college students.
 ## 🌐 Quick Links
 
 - **Live Application**: [https://ais-pre-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app](https://ais-pre-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app)
-- **Development Environment**: [https://ais-dev-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app](https://ais-dev-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app)
 - **GitHub Repository**: [https://github.com/techier-coder-4/Anjali-Vicodathon_hackathon-1](https://github.com/techier-coder-4/Anjali-Vicodathon_hackathon-1)
 
 ---
