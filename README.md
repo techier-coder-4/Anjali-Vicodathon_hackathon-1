@@ -4,6 +4,46 @@ A 60-day learning and consistency platform for college students.
 
 ---
 
+## 🌐 Quick Links
+
+- **Live Application**: [https://ais-pre-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app](https://ais-pre-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app)
+- **Development Environment**: [https://ais-dev-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app](https://ais-dev-amdzihvzatrc63h2uxadlv-740479080993.asia-southeast1.run.app)
+- **GitHub Repository**: [https://github.com/techier-coder-4/Anjali-Vicodathon_hackathon-1](https://github.com/techier-coder-4/Anjali-Vicodathon_hackathon-1)
+
+---
+
+## 🗺️ First-Time User Evaluation Route Map & Flow
+
+For judges, developers, and first-time reviewers, here is the exact step-by-step route map to explore the application:
+
+```
+[ 1. Landing Page (`/`) ]
+        │
+        ├── View active tracks & features -> Click "Get Started" or "Explore Challenges"
+        │
+[ 2. Student Dashboard (`/dashboard`) ]
+        │
+        ├── View Active 60-Day Journey, Daily Streaks & Stage Milestones
+        ├── Click "Challenge Yourself" to create a custom 60-day roadmap
+        ├── Click "Switch Journey" to manage multiple independent learning paths
+        │
+[ 3. Daily Challenge Page (`/day/12` or `/day/1`) ]
+        │
+        ├── Step-by-step interactive task checklist & deliverable guidelines
+        ├── Submit Proof of Work (GitHub Repo link / LinkedIn post)
+        ├── Complete Reflection Checkpoint & tag understanding (Grasped / Needs Review / Struggling)
+        ├── Interact with AI Learning Guide (Gemini AI Mentor or Guided Mode)
+        │
+[ 4. Challenges Explorer (`/challenges`) ]
+        │
+        └── Browse all domain-specific tracks (Frontend, Backend, VLSI, AI/Data, Embedded, etc.)
+        │
+[ 5. Student Profile (`/profile`) ]
+        └── Review cumulative statistics, submitted proofs of work, and unlocked badges
+```
+
+---
+
 ## 1. Overview
 
 **ABTalks** is an interactive 60-day learning and challenge platform designed to transform passive tech learners into consistent, practical builders. 
@@ -253,9 +293,13 @@ This compiles client static assets to `dist/` and bundles `server.ts` to `dist/s
 
 ---
 
-## 23. Hackathon Route Map
+## 23. Hackathon Route Map & Evaluation Flow
 
-/
-/dashboard
-/day/12
+The primary application routes provided for hackathon evaluation:
+
+- `/` — **Landing Page**: Platform overview, core feature showcase, and entry point.
+- `/dashboard` — **Student Dashboard**: Active journey overview, current streak counter, stage progress, journey switcher, and "Challenge Yourself" modal trigger.
+- `/day/12` (or `/day/1`) — **Daily Challenge Workspace**: Task checklist, resource guides, GitHub/LinkedIn proof of work submission, reflection checkpoints, and AI Mentor panel.
+- `/challenges` — **Curated Roadmaps**: Category-specific 60-day roadmaps across software, hardware, and emerging tech domains.
+- `/profile` — **Student Portfolio**: Overall stats, completed deliverables, reflection logs, and earned achievement badges.
 
